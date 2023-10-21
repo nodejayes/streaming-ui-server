@@ -19,3 +19,8 @@
 
 # Go workspace file
 go.work
+timetracker
+ui
+live-replacer/lib
+live-replacer/node_modules
+tmp

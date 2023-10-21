@@ -1,0 +1,14 @@
+{
+  "name": "live-replacer",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "webpack"
+  },
+  "devDependencies": {
+    "typescript": "5.2.2",
+    "ts-loader": "9.5.0",
+    "webpack-cli": "5.1.4"
+  }
+}

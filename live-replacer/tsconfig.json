@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "target": "ES5",
+    "module": "CommonJS",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "outDir": "lib",
+    "sourceMap": true,
+    "declaration": true,
+    "strict": true
+  },
+  "include": ["src"]
+}
