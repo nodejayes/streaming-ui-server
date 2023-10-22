@@ -1,6 +1,8 @@
 package main
 
 import (
+	"fmt"
+
 	"github.com/gin-gonic/gin"
 	"github.com/nodejayes/streaming-ui-server/server"
 	"github.com/nodejayes/streaming-ui-server/server/socket"
@@ -24,8 +26,16 @@ func main() {
 
 	server.OnAction[string, ActionContext]("ping", func(params string, ctx ActionContext) {
 		server.SendCaller(socket.Action[string, ActionContext]{
-			Type:    "replaceHtml::header",
+			Type:    "replaceHtml::#header",
 			Payload: "<h1>Pong</h1>",
+			Context: ctx,
+		})
+	})
+
+	server.OnAction[float64, ActionContext]("count increase", func(params float64, ctx ActionContext) {
+		server.SendCaller(socket.Action[string, ActionContext]{
+			Type:    "replaceHtml::#counter li",
+			Payload: fmt.Sprintf("<p>%v</p>", params),
 			Context: ctx,
 		})
 	})

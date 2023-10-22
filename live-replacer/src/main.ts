@@ -2,6 +2,11 @@ const CLIENT_ID_KEY = "clientId";
 const IDENTITY_LOCATION = "/identity";
 const WS_LOCATION = "ws://localhost:40000/ws";
 
+interface Action<T> {
+  type: string;
+  payload: T;
+}
+
 function getClientId(): string | null {
   return localStorage.getItem(CLIENT_ID_KEY);
 }
@@ -38,15 +43,15 @@ async function openWebSocket(): Promise<{
     const ws = new WebSocket(`${WS_LOCATION}?clientId=${getClientId()}`);
     const api = {
       send: (data: any) => ws.send(JSON.stringify(data)),
-      onMessage: ws.onmessage,
-      onClose: ws.onclose,
+      onMessage: (_ev: MessageEvent<any>) => {},
+      onClose: (_ev: CloseEvent) => {},
     };
     ws.onopen = () => {
       console.info("open");
       resolve(api);
     };
-    ws.onmessage = console.info;
-    ws.onclose = console.info;
+    ws.onmessage = (ev) => api.onMessage(ev);
+    ws.onclose = (ev) => api.onClose(ev);
   });
 }
 
@@ -54,7 +59,16 @@ async function render() {
   // select all elements with listener
 }
 
-async function replaceElements() {}
+async function replaceElements(action: Action<string>) {
+  if (action.type.startsWith("replaceHtml::")) {
+    const selector = action.type.split("::")[1];
+    const elements = document.querySelectorAll(selector);
+    if (!elements) {
+      return;
+    }
+    elements.forEach((element) => (element.innerHTML = action.payload));
+  }
+}
 
 (async function () {
   await ensureClientId();
@@ -64,12 +78,15 @@ async function replaceElements() {}
     openWebSocket().then((a) => (api = a));
   };
   api.onMessage = async (msg) => {
-    console.info(msg);
-    await replaceElements();
+    console.info("onMessage", msg);
+    await replaceElements(JSON.parse(msg.data));
     await render();
   };
   await render();
   setTimeout(() => {
     api.send({ type: "ping", payload: "hallo" });
+  }, 1000);
+  setInterval(() => {
+    api.send({ type: "count increase", payload: 1 });
   }, 1000);
 })();

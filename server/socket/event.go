@@ -27,6 +27,10 @@ var parseSocketMessageEvent = event_emitter.Event[ParseSocketMessageArguments, A
 
 func OnAction[TPayload, TContext any](typ string, execution func(action Action[TPayload, TContext])) event_emitter.Subscription {
 	return event_emitter.Subscribe(parseSocketMessageEvent, func(params ParseSocketMessageArguments, action Action[any, any]) {
+		if action.Type != typ {
+			return
+		}
+		// TODO: better concept for parsing int
 		convertedPayload, ok := action.Payload.(TPayload)
 		if !ok {
 			log.Printf("skip action %s payload no type match %v", action.Type, action.Payload)
