@@ -21,6 +21,6 @@ type (
 	Instance interface {
 		GetClientId() string
 		Send(action Action[any, any]) error
-		Reciever() event_emitter.Event[ParseSocketMessageArguments, Action[any, any]]
+		Reciever() event_emitter.Event[ParseSocketMessageArguments, ParseSocketMessageArguments]
 	}
 )

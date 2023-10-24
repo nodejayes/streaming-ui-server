@@ -4,38 +4,34 @@ import (
 	"fmt"
 
 	"github.com/gin-gonic/gin"
+	di "github.com/nodejayes/generic-di"
+	"github.com/nodejayes/streaming-ui-server/example"
 	"github.com/nodejayes/streaming-ui-server/server"
 	"github.com/nodejayes/streaming-ui-server/server/socket"
 	"github.com/nodejayes/streaming-ui-server/timetracker"
 )
 
-type ActionContext struct {
-	ID string
-}
-
-func (ctx ActionContext) GetClientId() string {
-	return ctx.ID
-}
-
 func main() {
-	server.CreateActionContext(func(clientId string, ctx *gin.Context) (ActionContext, error) {
-		return ActionContext{
-			ID: clientId,
+	server.CreateActionContext(func(clientId string, ctx *gin.Context) (example.ActionContext, error) {
+		return example.ActionContext{
+			ID:    clientId,
+			State: di.Inject[example.AppState](clientId),
 		}, nil
 	})
 
-	server.OnAction[string, ActionContext]("ping", func(params string, ctx ActionContext) {
-		server.SendCaller(socket.Action[string, ActionContext]{
+	server.OnAction(example.NewPingAction(), func(action example.PingAction, ctx example.ActionContext) {
+		server.SendCaller(socket.Action[string, example.ActionContext]{
 			Type:    "replaceHtml::#header",
 			Payload: "<h1>Pong</h1>",
 			Context: ctx,
 		})
 	})
 
-	server.OnAction[float64, ActionContext]("count increase", func(params float64, ctx ActionContext) {
-		server.SendCaller(socket.Action[string, ActionContext]{
+	server.OnAction(example.NewCounterAction(), func(action example.CounterAction, ctx example.ActionContext) {
+		ctx.State.Counter += action.Payload
+		server.SendCaller(socket.Action[string, example.ActionContext]{
 			Type:    "replaceHtml::#counter li",
-			Payload: fmt.Sprintf("<p>%v</p>", params),
+			Payload: fmt.Sprintf("<p>%v</p>", ctx.State.Counter),
 			Context: ctx,
 		})
 	})

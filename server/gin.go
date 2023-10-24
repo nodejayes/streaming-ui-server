@@ -1,10 +1,12 @@
 package server
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
+	event_emitter "github.com/nodejayes/event-emitter"
 	di "github.com/nodejayes/generic-di"
 	livereplacer "github.com/nodejayes/streaming-ui-server/live-replacer"
 	"github.com/nodejayes/streaming-ui-server/server/identity"
@@ -17,9 +19,14 @@ func init() {
 
 var contextCreator func(clientId string, ctx *gin.Context) (any, error)
 
-type ClientIdentiy interface {
-	GetClientId() string
-}
+type (
+	ClientIdentiy interface {
+		GetClientId() string
+	}
+	Action interface {
+		GetType() string
+	}
+)
 
 func New() *gin.Engine {
 	router := gin.Default()
@@ -62,9 +69,21 @@ func SendTo[TPayload, TContext any](socketSelector func(socket socket.Instance) 
 	}
 }
 
-func OnAction[TPayload, TContext any](typ string, execution func(params TPayload, ctx TContext)) {
-	socket.OnAction[TPayload, TContext](typ, func(action socket.Action[TPayload, TContext]) {
-		execution(action.Payload, action.Context)
+func OnAction[TAction Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext)) {
+	event_emitter.Subscribe(socket.ParseSocketMessageEvent, func(params socket.ParseSocketMessageArguments, _ socket.ParseSocketMessageArguments) {
+		var action TAction
+		err := json.Unmarshal(params.Message, &action)
+		if err != nil {
+			return
+		}
+		if action.GetType() != actionInstance.GetType() {
+			return
+		}
+		c, ok := params.Context.(TContext)
+		if !ok {
+			return
+		}
+		execution(action, c)
 	})
 }
 

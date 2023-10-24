@@ -50,7 +50,7 @@ func Handle(contextCreator func(clientId string, ctx *gin.Context) (any, error))
 				sessionFactory.RemoveSession(clientId)
 				return
 			}
-			event_emitter.Emit(parseSocketMessageEvent, ParseSocketMessageArguments{
+			event_emitter.Emit(ParseSocketMessageEvent, ParseSocketMessageArguments{
 				Message: p,
 				Context: actionContext,
 			})

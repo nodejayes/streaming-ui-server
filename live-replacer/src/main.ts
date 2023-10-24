@@ -47,7 +47,6 @@ async function openWebSocket(): Promise<{
       onClose: (_ev: CloseEvent) => {},
     };
     ws.onopen = () => {
-      console.info("open");
       resolve(api);
     };
     ws.onmessage = (ev) => api.onMessage(ev);
@@ -74,11 +73,9 @@ async function replaceElements(action: Action<string>) {
   await ensureClientId();
   let api = await openWebSocket();
   api.onClose = () => {
-    console.info("close socket");
     openWebSocket().then((a) => (api = a));
   };
   api.onMessage = async (msg) => {
-    console.info("onMessage", msg);
     await replaceElements(JSON.parse(msg.data));
     await render();
   };
@@ -86,7 +83,5 @@ async function replaceElements(action: Action<string>) {
   setTimeout(() => {
     api.send({ type: "ping", payload: "hallo" });
   }, 1000);
-  setInterval(() => {
-    api.send({ type: "count increase", payload: 1 });
-  }, 1000);
+  api.send({ type: "count increase", payload: 1 });
 })();

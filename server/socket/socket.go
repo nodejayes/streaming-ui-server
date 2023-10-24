@@ -10,14 +10,14 @@ import (
 type instance struct {
 	id         string
 	connection *websocket.Conn
-	reciever   event_emitter.Event[ParseSocketMessageArguments, Action[any, any]]
+	reciever   event_emitter.Event[ParseSocketMessageArguments, ParseSocketMessageArguments]
 }
 
 func NewSocket(connection *websocket.Conn, id string) *instance {
 	return &instance{
 		connection: connection,
 		id:         id,
-		reciever:   parseSocketMessageEvent,
+		reciever:   ParseSocketMessageEvent,
 	}
 }
 
@@ -29,7 +29,7 @@ func (ctx *instance) Send(action Action[any, any]) error {
 	return ctx.connection.WriteMessage(1, msg)
 }
 
-func (ctx *instance) Reciever() event_emitter.Event[ParseSocketMessageArguments, Action[any, any]] {
+func (ctx *instance) Reciever() event_emitter.Event[ParseSocketMessageArguments, ParseSocketMessageArguments] {
 	return ctx.reciever
 }
 
