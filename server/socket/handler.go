@@ -3,7 +3,6 @@ package socket
 import (
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -54,7 +53,6 @@ func Handle(contextCreator func(clientId string, ctx *gin.Context) (any, error))
 				Message: p,
 				Context: actionContext,
 			})
-			time.Sleep(time.Second)
 		}
 	}
 }

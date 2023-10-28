@@ -1,61 +1,26 @@
+import { ClientIdStore } from "./client-id";
+import { Socket } from "./socket";
+
 const CLIENT_ID_KEY = "clientId";
 const IDENTITY_LOCATION = "/identity";
 const WS_LOCATION = "ws://localhost:40000/ws";
+let API: WsApi | null = null;
 
-interface Action<T> {
-  type: string;
-  payload: T;
-}
+const clickEvent: EventListenerOrEventListenerObject = (e: Event) => {
+  if (!e.target) {
+    console.warn("missing click event target", e);
+    return;
+  }
+  const action = (e.target as any)?.getAttribute("lronclick");
+  const payload = (e.target as any)?.getAttribute("lrclickpayload");
+  API?.send({ type: action, payload: JSON.parse(payload) });
+};
 
-function getClientId(): string | null {
-  return localStorage.getItem(CLIENT_ID_KEY);
-}
-
-function setClientId(id: string) {
-  localStorage.setItem(CLIENT_ID_KEY, id);
-}
-
-function ensureClientId(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const id = getClientId();
-    if (!id) {
-      fetch(IDENTITY_LOCATION)
-        .then((response) => {
-          return response.text();
-        })
-        .then((id) => {
-          setClientId(id);
-          resolve();
-        })
-        .catch((err) => reject(err));
-    } else {
-      resolve();
-    }
+async function render(api: WsApi) {
+  document.querySelectorAll("[lrOnClick]").forEach((el) => {
+    el.removeEventListener("click", clickEvent);
+    el.addEventListener("click", clickEvent);
   });
-}
-
-async function openWebSocket(): Promise<{
-  send: (data: any) => void;
-  onMessage: ((msg: MessageEvent<any>) => any) | null;
-  onClose: ((e: CloseEvent) => any) | null;
-}> {
-  return new Promise((resolve) => {
-    const ws = new WebSocket(`${WS_LOCATION}?clientId=${getClientId()}`);
-    const api = {
-      send: (data: any) => ws.send(JSON.stringify(data)),
-      onMessage: (_ev: MessageEvent<any>) => {},
-      onClose: (_ev: CloseEvent) => {},
-    };
-    ws.onopen = () => {
-      resolve(api);
-    };
-    ws.onmessage = (ev) => api.onMessage(ev);
-    ws.onclose = (ev) => api.onClose(ev);
-  });
-}
-
-async function render() {
-  // select all elements with listener
 }
 
 async function replaceElements(action: Action<string>) {
@@ -70,18 +35,24 @@ async function replaceElements(action: Action<string>) {
 }
 
 (async function () {
-  await ensureClientId();
-  let api = await openWebSocket();
-  api.onClose = () => {
-    openWebSocket().then((a) => (api = a));
+  const clientStorage = new ClientIdStore(CLIENT_ID_KEY, IDENTITY_LOCATION);
+  await clientStorage.ensureClientId();
+  const socket = new Socket(WS_LOCATION, clientStorage);
+  API = await socket.openWebSocket();
+
+  API.onClose = () => {
+    socket.openWebSocket().then((a) => (API = a));
   };
-  api.onMessage = async (msg) => {
+  API.onMessage = async (msg) => {
     await replaceElements(JSON.parse(msg.data));
-    await render();
+    if (API) {
+      await render(API);
+    }
   };
-  await render();
+  await render(API);
   setTimeout(() => {
-    api.send({ type: "ping", payload: "hallo" });
+    if (API) {
+      API.send({ type: "ping", payload: "hallo" });
+    }
   }, 1000);
-  api.send({ type: "count increase", payload: 1 });
 })();
