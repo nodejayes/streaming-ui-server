@@ -1,6 +1,7 @@
 interface Action<T> {
   type: string;
-  payload: T;
+  payload?: T;
+  inputs?: { [key: string]: { [key: string]: string } };
 }
 
 interface WsApi {

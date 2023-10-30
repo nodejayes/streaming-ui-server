@@ -6,9 +6,10 @@ import (
 
 type (
 	Action[TPayload, TContext any] struct {
-		Type    string   `json:"type"`
-		Payload TPayload `json:"payload"`
-		Context TContext `json:"-"`
+		Type    string                       `json:"type"`
+		Payload TPayload                     `json:"payload"`
+		Inputs  map[string]map[string]string `json:"inputs"`
+		Context TContext                     `json:"-"`
 	}
 
 	SessionFactory interface {
