@@ -8,7 +8,6 @@ import (
 	"github.com/nodejayes/streaming-ui-server/example"
 	"github.com/nodejayes/streaming-ui-server/server"
 	"github.com/nodejayes/streaming-ui-server/server/socket"
-	"github.com/nodejayes/streaming-ui-server/timetracker"
 )
 
 func main() {
@@ -18,6 +17,8 @@ func main() {
 			State: di.Inject[example.AppState](clientId),
 		}, nil
 	})
+
+	server.AddPage(example.NewIndexPage())
 
 	server.OnAction(example.NewPingAction(), func(action example.PingAction, ctx example.ActionContext) {
 		server.SendCaller(socket.Action[string, example.ActionContext]{
@@ -36,6 +37,5 @@ func main() {
 		})
 	})
 
-	timetracker.NewHandler()
 	server.Run(":40000")
 }

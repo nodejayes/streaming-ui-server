@@ -11,6 +11,7 @@ import (
 	livereplacer "github.com/nodejayes/streaming-ui-server/live-replacer"
 	"github.com/nodejayes/streaming-ui-server/server/identity"
 	"github.com/nodejayes/streaming-ui-server/server/socket"
+	"github.com/nodejayes/streaming-ui-server/server/ui/ui_types"
 )
 
 func init() {
@@ -84,6 +85,12 @@ func OnAction[TAction Action, TContext any](actionInstance TAction, execution fu
 			return
 		}
 		execution(action, c)
+	})
+}
+
+func AddPage(page ui_types.Page) {
+	di.Inject[gin.Engine]().GET(page.GetPath(), func(ctx *gin.Context) {
+		ctx.Data(http.StatusOK, "text/html", []byte(page.Render()))
 	})
 }
 

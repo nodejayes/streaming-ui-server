@@ -21,6 +21,7 @@
 go.work
 timetracker
 ui
+!server/ui
 live-replacer/lib
 live-replacer/node_modules
 tmp
