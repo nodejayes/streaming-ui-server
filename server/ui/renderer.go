@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"html/template"
 
-	"github.com/nodejayes/streaming-ui-server/server/ui/ui_types"
+	"github.com/nodejayes/streaming-ui-server/server/ui/types"
 )
 
-func RenderComponent(component ui_types.Component) string {
+func RenderComponent(component types.Component) string {
 	return component.Render()
 }
 

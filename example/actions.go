@@ -1,34 +1,76 @@
 package example
 
+import "github.com/google/uuid"
+
 type (
 	PingAction struct {
-		Type    string `json:"type"`
-		Payload string `json:"payload"`
+		ElementID string                       `json:"elementId"`
+		Type      string                       `json:"type"`
+		Payload   string                       `json:"payload"`
+		Inputs    map[string]map[string]string `json:"inputs"`
 	}
 	CounterAction struct {
-		Type    string `json:"type"`
-		Payload int    `json:"payload"`
+		ElementID string                       `json:"elementId"`
+		Type      string                       `json:"type"`
+		Payload   int                          `json:"payload"`
+		Inputs    map[string]map[string]string `json:"inputs"`
 	}
 )
 
-func NewPingAction() PingAction {
-	return PingAction{
-		Type:    "ping",
-		Payload: "",
+func NewPingAction(payload string) *PingAction {
+	return &PingAction{
+		ElementID: uuid.New().String(),
+		Type:      "ping",
+		Payload:   payload,
+		Inputs:    nil,
 	}
 }
 
-func (ctx PingAction) GetType() string {
+func (ctx *PingAction) GetElementID() string {
+	return ctx.ElementID
+}
+
+func (ctx *PingAction) SetElementID(value string) {
+	ctx.ElementID = value
+}
+
+func (ctx *PingAction) GetType() string {
 	return ctx.Type
 }
 
-func NewCounterAction() CounterAction {
-	return CounterAction{
-		Type:    "count increase",
-		Payload: 0,
+func (ctx *PingAction) GetPayload() any {
+	return ctx.Payload
+}
+
+func (ctx *PingAction) GetInputs() map[string]map[string]string {
+	return ctx.Inputs
+}
+
+func NewCounterAction(payload int) *CounterAction {
+	return &CounterAction{
+		ElementID: uuid.New().String(),
+		Type:      "count increase",
+		Payload:   payload,
+		Inputs:    nil,
 	}
 }
 
-func (ctx CounterAction) GetType() string {
+func (ctx *CounterAction) GetElementID() string {
+	return ctx.ElementID
+}
+
+func (ctx *CounterAction) SetElementID(value string) {
+	ctx.ElementID = value
+}
+
+func (ctx *CounterAction) GetType() string {
 	return ctx.Type
+}
+
+func (ctx *CounterAction) GetPayload() any {
+	return ctx.Payload
+}
+
+func (ctx *CounterAction) GetInputs() map[string]map[string]string {
+	return ctx.Inputs
 }

@@ -19,14 +19,21 @@ const sendMessage = (target: HTMLElement | null, eventName: string) => {
     console.warn(`missing ${actionName} on element`, target);
     return;
   }
+  const elementId = target.getAttribute("id") ?? null;
   const payload = target.getAttribute(payloadName) ?? null;
   const inputSelectors: string | null = target.getAttribute(inputsName) ?? null;
   if (!payload && !inputSelectors) {
-    API?.send({ type: action, payload: null, inputs: {} });
+    API?.send({
+      elementId,
+      type: action,
+      payload: null,
+      inputs: {},
+    });
     return;
   }
   if (!inputSelectors) {
     API?.send({
+      elementId,
       type: action,
       payload: JSON.parse(payload ?? "null"),
       inputs: {},
@@ -51,6 +58,7 @@ const sendMessage = (target: HTMLElement | null, eventName: string) => {
     });
   }
   API?.send({
+    elementId,
     type: action,
     payload: JSON.parse(payload ?? "null"),
     inputs: {},
@@ -99,9 +107,4 @@ async function replaceElements(action: Action<string>) {
     }
   };
   await render(API);
-  setTimeout(() => {
-    if (API) {
-      API.send({ type: "ping", payload: "hallo" });
-    }
-  }, 1000);
 })();

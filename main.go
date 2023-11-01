@@ -1,13 +1,10 @@
 package main
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 	di "github.com/nodejayes/generic-di"
 	"github.com/nodejayes/streaming-ui-server/example"
 	"github.com/nodejayes/streaming-ui-server/server"
-	"github.com/nodejayes/streaming-ui-server/server/socket"
 )
 
 func main() {
@@ -18,8 +15,12 @@ func main() {
 		}, nil
 	})
 
+	server.RegisterAction[*example.CounterAction, example.ActionContext](example.NewCounterAction(0))
+	server.RegisterAction[*example.PingAction, example.ActionContext](example.NewPingAction(""))
+
 	server.AddPage(example.NewIndexPage())
 
+	/* TODO: implement init Handler
 	server.OnAction(example.NewPingAction(), func(action example.PingAction, ctx example.ActionContext) {
 		server.SendCaller(socket.Action[string, example.ActionContext]{
 			Type:    "replaceHtml::#header",
@@ -27,15 +28,7 @@ func main() {
 			Context: ctx,
 		})
 	})
-
-	server.OnAction(example.NewCounterAction(), func(action example.CounterAction, ctx example.ActionContext) {
-		ctx.State.Counter += action.Payload
-		server.SendCaller(socket.Action[string, example.ActionContext]{
-			Type:    "replaceHtml::#counter li",
-			Payload: fmt.Sprintf("<p>%v</p>", ctx.State.Counter),
-			Context: ctx,
-		})
-	})
+	*/
 
 	server.Run(":40000")
 }
