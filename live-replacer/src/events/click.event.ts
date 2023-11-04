@@ -1,9 +1,12 @@
 import {ClickEventData, EventData} from "./types";
 
 export class ClickEvent {
+    private static blocked = false;
     private static api: WsApi | null = null;
     private static eventHandler = (e: Event) => {
-        console.info(e);
+        if (ClickEvent.blocked) {
+            return;
+        }
         const event = e as PointerEvent;
         if (!event) {
             console.warn("click event is not of type PointerEvent", e);
@@ -13,17 +16,42 @@ export class ClickEvent {
             console.warn("missing click event target", e);
             return;
         }
-        ClickEvent.handle(event.target as HTMLElement, ClickEvent.typ, {
+        const delayName = `lr${ClickEvent.typ}Delay`;
+        const target = event.target as HTMLElement;
+        if (!target) {
+            console.warn(`no element on target event ${ClickEvent.typ}`);
+            return;
+        }
+        const delay = target.getAttribute(delayName);
+        if (delay) {
+            const args = delay.split(":");
+            let delayTime = 0;
+            let delayRun = 0;
+            if (args.length > 0) {
+                delayTime = isNaN(parseInt(args[0])) ? 0 : parseInt(args[0]);
+                if (args.length > 1) {
+                    delayRun = isNaN(parseInt(args[1])) ? 0 : parseInt(args[1]);
+                }
+            }
+            ClickEvent.blocked = true;
+            setTimeout(() => {
+                ClickEvent.blocked = false;
+            }, delayTime);
+            setTimeout(() => {
+                ClickEvent.handle(target, ClickEvent.typ, {
+                    typ: ClickEvent.typ,
+                    ctrlKey: event.ctrlKey,
+                } as ClickEventData);
+            }, delayRun);
+            return;
+        }
+        ClickEvent.handle(target, ClickEvent.typ, {
             typ: ClickEvent.typ,
             ctrlKey: event.ctrlKey,
         } as ClickEventData);
     }
 
-    private static handle(target: HTMLElement | null, eventName: string, eventData: EventData) {
-        if (!target) {
-            console.warn(`no element on target event ${eventName}`);
-            return;
-        }
+    private static handle(target: HTMLElement, eventName: string, eventData: EventData) {
         const actionName = `lr${eventName}action`;
         const payloadName = `lr${eventName}payload`;
         const inputsName = `lr${eventName}inputs`;

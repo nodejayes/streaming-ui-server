@@ -33,5 +33,6 @@ func (ctx *Button) Render() string {
 			lrClickAction="{{ .EventType .Options.OnClick }}"
 			lrClickPayload="{{ .EventPayload .Options.OnClick }}"
 		{{ end }}
+		lrClickDelay="500:0"
 	>{{ .Component .Content }}</button>`, ctx)
 }
