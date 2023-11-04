@@ -16,11 +16,8 @@ type (
 		ClickEventData | OtherEventData
 	}
 	Action interface {
-		GetElementID() string
-		SetElementID(value string)
 		GetType() string
 		GetPayload() any
-		GetInputs() map[string]map[string]string
 	}
 	Renderer interface {
 		Render() string

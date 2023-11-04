@@ -37,24 +37,24 @@ export class ClickEvent {
         const inputSelectors: string | null = target.getAttribute(inputsName) ?? null;
         if (!payload && !inputSelectors) {
             ClickEvent.api?.send({
+                elementId,
                 action: {
-                    elementId,
                     type: action,
                     payload: null,
-                    inputs: {},
                 },
+                inputs: {},
                 eventData,
             });
             return;
         }
         if (!inputSelectors) {
             ClickEvent.api?.send({
+                elementId,
                 action: {
-                    elementId,
                     type: action,
                     payload: JSON.parse(payload ?? "null"),
-                    inputs: {},
                 },
+                inputs: {},
                 eventData,
             });
             return;
@@ -77,12 +77,12 @@ export class ClickEvent {
             });
         }
         ClickEvent.api?.send({
+            elementId,
             action: {
-                elementId,
                 type: action,
                 payload: JSON.parse(payload ?? "null"),
-                inputs: {},
             },
+            inputs: {},
             eventData,
         });
     }

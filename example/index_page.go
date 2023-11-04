@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/nodejayes/streaming-ui-server/server"
 	"github.com/nodejayes/streaming-ui-server/server/socket"
 	"github.com/nodejayes/streaming-ui-server/server/ui"
@@ -20,11 +21,13 @@ type IndexPage struct {
 
 func NewIndexPage() *IndexPage {
 	increaseCounter := NewCounterAction(1)
+	increaseCounterButtonID := uuid.New().String()
 	decreaseCounter := NewCounterAction(-1)
+	decreaseCounterButtonID := uuid.New().String()
 	return &IndexPage{
 		Title: "Index Page",
-		IncreaseCounterButton: components.NewButton(increaseCounter.GetElementID(), components.NewText("+"), components.ButtonOptions{
-			OnClick: server.CreateEventHandler(increaseCounter, func(action types.Action, ctx ActionContext, eventData types.ClickEventData) {
+		IncreaseCounterButton: components.NewButton(increaseCounterButtonID, components.NewText("+"), components.ButtonOptions{
+			OnClick: server.CreateEventHandler(increaseCounter, increaseCounterButtonID, func(action types.Action, ctx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 				ctx.State.Counter += serverutils.ReadPayload[int](action)
 				server.SendCaller(socket.Action[string, ActionContext]{
 					Type:    "replaceHtml::#counter li",
@@ -33,8 +36,8 @@ func NewIndexPage() *IndexPage {
 				})
 			}),
 		}),
-		DecreaseCounterButton: components.NewButton(decreaseCounter.GetElementID(), components.NewText("-"), components.ButtonOptions{
-			OnClick: server.CreateEventHandler(decreaseCounter, func(action types.Action, ctx ActionContext, eventData types.ClickEventData) {
+		DecreaseCounterButton: components.NewButton(decreaseCounterButtonID, components.NewText("-"), components.ButtonOptions{
+			OnClick: server.CreateEventHandler(decreaseCounter, decreaseCounterButtonID, func(action types.Action, ctx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 				ctx.State.Counter += serverutils.ReadPayload[int](action)
 				server.SendCaller(socket.Action[string, ActionContext]{
 					Type:    "replaceHtml::#counter li",
