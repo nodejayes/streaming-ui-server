@@ -1,6 +1,20 @@
 package types
 
 type (
+	BaseEventData struct {
+		Typ string `json:"typ"`
+	}
+	ClickEventData struct {
+		BaseEventData
+		CtrlKey bool `json:"ctrlKey"`
+	}
+	OtherEventData struct {
+		BaseEventData
+		Name string `json:"name"`
+	}
+	EventData interface {
+		ClickEventData | OtherEventData
+	}
 	Action interface {
 		GetElementID() string
 		SetElementID(value string)

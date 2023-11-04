@@ -23,11 +23,15 @@ func init() {
 
 var contextCreator func(clientId string, ctx *gin.Context) (any, error)
 var actionHandlerMutex = &sync.Mutex{}
-var actionHandlers = make(map[string][]func(action types.Action, ctx any))
+var actionHandlers = make(map[string][]func(action types.Action, ctx any, eventData map[string]any))
 
 type (
 	ClientIdentiy interface {
 		GetClientId() string
+	}
+	ClientMessage[T any] struct {
+		Action    T              `json:"action"`
+		EventData map[string]any `json:"eventData"`
 	}
 )
 
@@ -79,22 +83,21 @@ func SendTo[TPayload, TContext any](socketSelector func(socket socket.Instance) 
 	}
 }
 
-func OnAction[TAction types.Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext)) {
+func OnAction[TAction types.Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext, eventData map[string]any)) {
 	event_emitter.Subscribe(socket.ParseSocketMessageEvent, func(params socket.ParseSocketMessageArguments, _ socket.ParseSocketMessageArguments) {
-		var action TAction
-		err := json.Unmarshal(params.Message, &action)
+		var msg ClientMessage[TAction]
+		err := json.Unmarshal(params.Message, &msg)
 		if err != nil {
-			println(err.Error())
 			return
 		}
-		if action.GetType() != actionInstance.GetType() {
+		if msg.Action.GetType() != actionInstance.GetType() {
 			return
 		}
 		c, ok := params.Context.(TContext)
 		if !ok {
 			return
 		}
-		execution(action, c)
+		execution(msg.Action, c, msg.EventData)
 	})
 }
 
@@ -105,33 +108,44 @@ func AddPage(page types.Page) {
 }
 
 func RegisterAction[TAction types.Action, TContext any](action TAction) {
-	OnAction[TAction, TContext](action, func(action TAction, ctx TContext) {
+	OnAction[TAction, TContext](action, func(action TAction, ctx TContext, eventData map[string]any) {
 		actionKey := getActionKey(action)
 		handlers, ok := actionHandlers[actionKey]
 		if !ok {
 			return
 		}
 		for _, handler := range handlers {
-			handler(action, ctx)
+			handler(action, ctx, eventData)
 		}
 	})
 }
 
-func CreateEventHandler[TContext any](action types.Action, handler func(action types.Action, ctx TContext)) types.Action {
+func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, handler func(action types.Action, ctx TContext, eventData TEventData)) types.Action {
 	actionHandlerMutex.Lock()
 	defer actionHandlerMutex.Unlock()
 	actionKey := getActionKey(action)
 	handlers, ok := actionHandlers[actionKey]
 	if !ok {
-		handlers = make([]func(action types.Action, ctx any), 0)
+		handlers = make([]func(action types.Action, ctx any, eventData map[string]any), 0)
 	}
-	handlers = append(handlers, func(action types.Action, ctx any) {
+	handlers = append(handlers, func(action types.Action, ctx any, eventData map[string]any) {
 		ctxConverted, ok := ctx.(TContext)
 		if !ok {
 			fmt.Println(fmt.Sprintf("Error on convert Context: %v", ok))
 			return
 		}
-		handler(action, ctxConverted)
+		var convertedEventData TEventData
+		str, err := json.Marshal(eventData)
+		if err != nil {
+			fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
+			return
+		}
+		err = json.Unmarshal(str, &convertedEventData)
+		if err != nil {
+			fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
+			return
+		}
+		handler(action, ctxConverted, convertedEventData)
 	})
 	actionHandlers[actionKey] = handlers
 	return action

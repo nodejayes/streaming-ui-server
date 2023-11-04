@@ -20,15 +20,5 @@ func main() {
 
 	server.AddPage(example.NewIndexPage())
 
-	/* TODO: implement init Handler
-	server.OnAction(example.NewPingAction(), func(action example.PingAction, ctx example.ActionContext) {
-		server.SendCaller(socket.Action[string, example.ActionContext]{
-			Type:    "replaceHtml::#header",
-			Payload: "<h1>Pong</h1>",
-			Context: ctx,
-		})
-	})
-	*/
-
 	server.Run(":40000")
 }

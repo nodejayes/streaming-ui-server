@@ -24,7 +24,7 @@ func NewIndexPage() *IndexPage {
 	return &IndexPage{
 		Title: "Index Page",
 		IncreaseCounterButton: components.NewButton(increaseCounter.GetElementID(), components.NewText("+"), components.ButtonOptions{
-			OnClick: server.CreateEventHandler(increaseCounter, func(action types.Action, ctx ActionContext) {
+			OnClick: server.CreateEventHandler(increaseCounter, func(action types.Action, ctx ActionContext, eventData types.ClickEventData) {
 				ctx.State.Counter += serverutils.ReadPayload[int](action)
 				server.SendCaller(socket.Action[string, ActionContext]{
 					Type:    "replaceHtml::#counter li",
@@ -34,7 +34,7 @@ func NewIndexPage() *IndexPage {
 			}),
 		}),
 		DecreaseCounterButton: components.NewButton(decreaseCounter.GetElementID(), components.NewText("-"), components.ButtonOptions{
-			OnClick: server.CreateEventHandler(decreaseCounter, func(action types.Action, ctx ActionContext) {
+			OnClick: server.CreateEventHandler(decreaseCounter, func(action types.Action, ctx ActionContext, eventData types.ClickEventData) {
 				ctx.State.Counter += serverutils.ReadPayload[int](action)
 				server.SendCaller(socket.Action[string, ActionContext]{
 					Type:    "replaceHtml::#counter li",
@@ -58,7 +58,7 @@ func (ctx *IndexPage) Render() string {
 			<title>{{ .Title }}</title>
 			<script src="/live-replacer/lib/bundle.js"></script>
 		</head>
-		<body>
+		<body lrloadaction="ping" lrloadpayload="pong">
 			<div id="header">
 				<h1>{{ .Title }}</h1>
 			</div>
