@@ -8,7 +8,8 @@ import (
 
 type (
 	ButtonOptions struct {
-		OnClick types.Action
+		OnClick     types.Action
+		OnStrgClick types.Action
 	}
 	Button struct {
 		utils.ViewHelper
@@ -27,12 +28,27 @@ func NewButton(id string, content types.Component, options ButtonOptions) *Butto
 }
 
 func (ctx *Button) Render() string {
-	return ui.Render(`<button
+	return ui.Render(`
+{{ if .Options.OnStrgClick }}
+	<script>
+		function strgFilter(e) {
+			return e.ctrlKey;
+		}
+	</script>
+{{ end }}
+<button
 		id="{{ .Id }}"
-		{{if .Options.OnClick }}
+		{{ if .Options.OnClick }}
 			lrClickAction="{{ .EventType .Options.OnClick }}"
 			lrClickPayload="{{ .EventPayload .Options.OnClick }}"
 		{{ end }}
 		lrClickDelay="500"
+		{{ if .Options.OnStrgClick }}
+			lrClickFilter="strgFilter"
+			{{ if not (eq .Options.OnStrgClick.GetType .Options.OnClick.GetType) }}
+			lrClickFilterAction="{{ .EventType .Options.OnStrgClick }}"
+			{{ end }}
+			lrClickFilterPayload="{{ .EventPayload .Options.OnStrgClick }}"
+		{{ end }}
 	>{{ .Component .Content }}</button>`, ctx)
 }

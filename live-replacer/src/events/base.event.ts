@@ -1,5 +1,15 @@
 import { EventData } from "./types";
 
+interface ApiMessage {
+    elementId: string;
+    action: {
+        type: string;
+        payload: any
+    },
+    inputs?: {[key: string]: {[key: string]: string}},
+    eventData?: EventData,
+}
+
 export class BaseEvent {
     private blocked: {[key: string]: boolean} = {};
     private api: WsApi | null = null;
@@ -12,7 +22,7 @@ export class BaseEvent {
         });
     }
 
-    public handleEvent(typ: string, target: HTMLElement, eventDataBuilder: () => EventData) {
+    public handleEvent(typ: string, target: HTMLElement, eventDataBuilder: () => EventData, originalEvent: any) {
         if (!target) {
             console.warn(`no element on target event ${typ}`);
             return;
@@ -40,75 +50,91 @@ export class BaseEvent {
                 this.blocked[elementId] = false;
             }, delayTime);
             setTimeout(() => {
-                this.handle(target, typ, eventDataBuilder(), elementId);
+                this.handle(target, typ, eventDataBuilder(), elementId, originalEvent);
             }, delayRun);
             return;
         }
 
         // run without Delay
-        this.handle(target, typ, eventDataBuilder(), elementId);
+        this.handle(target, typ, eventDataBuilder(), elementId, originalEvent);
     }
 
-    private handle(target: HTMLElement, eventName: string, eventData: EventData, elementId: string) {
+    private handle(target: HTMLElement, eventName: string, eventData: EventData, elementId: string, originalEvent: any) {
         const actionName = `lr${eventName}action`;
-        const payloadName = `lr${eventName}payload`;
-        const inputsName = `lr${eventName}inputs`;
         const action = target.getAttribute(actionName);
         if (!action) {
             console.warn(`missing ${actionName} on element`, target);
             return;
         }
-        const payload = target.getAttribute(payloadName) ?? null;
-        const inputSelectors: string | null = target.getAttribute(inputsName) ?? null;
-        if (!payload && !inputSelectors) {
-            this.api?.send({
-                elementId,
-                action: {
-                    type: action,
-                    payload: null,
-                },
-                inputs: {},
-                eventData,
-            });
-            return;
-        }
-        if (!inputSelectors) {
-            this.api?.send({
-                elementId,
-                action: {
-                    type: action,
-                    payload: JSON.parse(payload ?? "null"),
-                },
-                inputs: {},
-                eventData,
-            });
-            return;
-        }
 
-        const selectors = inputSelectors.split("<=>");
-        const inputData: { [key: string]: { [key: string]: string } } = {};
-        for (const selector of selectors) {
-            document.querySelectorAll(selector)?.forEach((el) => {
-                el.querySelectorAll("input")?.forEach((input: HTMLInputElement) => {
-                    const inputName = input.getAttribute("name");
-                    if (!inputName) {
-                        return;
-                    }
-                    if (!inputData[selector]) {
-                        inputData[selector] = {};
-                    }
-                    inputData[selector][inputName] = input.value;
-                });
-            });
+        const msg = this.buildMessage(target, eventName, elementId, action, eventData, originalEvent);
+        if (!msg) {
+            return;
         }
-        this.api?.send({
+        this.api?.send(msg);
+    }
+
+    private buildMessage(target: HTMLElement, eventName: string, elementId: string, action: string, eventData: EventData, originalEvent: any): ApiMessage | null {
+        const payloadName = `lr${eventName}payload`;
+        const inputsName = `lr${eventName}inputs`;
+        const filterName = `lr${eventName}Filter`;
+        const filterActionName = `lr${eventName}FilterAction`;
+        const filterPayloadName = `lr${eventName}FilterPayload`;
+
+        const msg: ApiMessage = {
             elementId,
             action: {
                 type: action,
-                payload: JSON.parse(payload ?? "null"),
+                payload: null,
             },
             inputs: {},
             eventData,
-        });
+        };
+
+        const payload = target.getAttribute(payloadName) ?? null;
+        const inputSelectors: string | null = target.getAttribute(inputsName) ?? null;
+        if (payload) {
+            msg.action.payload = JSON.parse(payload ?? "null");
+        }
+        if (inputSelectors) {
+            const selectors = inputSelectors.split("<=>");
+            const inputData: { [key: string]: { [key: string]: string } } = {};
+            for (const selector of selectors) {
+                document.querySelectorAll(selector)?.forEach((el) => {
+                    el.querySelectorAll("input")?.forEach((input: HTMLInputElement) => {
+                        const inputName = input.getAttribute("name");
+                        if (!inputName) {
+                            return;
+                        }
+                        if (!inputData[selector]) {
+                            inputData[selector] = {};
+                        }
+                        inputData[selector][inputName] = input.value;
+                    });
+                });
+            }
+            msg.inputs = inputData;
+        }
+
+        const filterFn = target.getAttribute(filterName);
+        if (filterFn && typeof (global as any)[filterFn] === "function") {
+            const filterAction = target.getAttribute(filterActionName);
+            const filterPayload = target.getAttribute(filterPayloadName);
+            if ((global as any)[filterFn](originalEvent)) {
+                if (filterAction) {
+                    msg.action.type = filterAction;
+                }
+                if (filterPayload) {
+                    msg.action.payload = JSON.parse(filterPayload) ?? null;
+                }
+            } else {
+                if (!filterAction) {
+                    console.info('not found filter');
+                    return null;
+                }
+            }
+        }
+
+        return msg;
     }
 }

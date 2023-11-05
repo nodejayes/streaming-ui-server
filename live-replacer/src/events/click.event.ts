@@ -16,7 +16,7 @@ export class ClickEvent {
         ClickEvent.base?.handleEvent(ClickEvent.typ, event.target as HTMLElement, () => ({
             typ: ClickEvent.typ,
             ctrlKey: event.ctrlKey,
-        } as ClickEventData));
+        } as ClickEventData), e);
     }
 
     private static get typ() {

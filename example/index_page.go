@@ -21,6 +21,7 @@ type IndexPage struct {
 
 func NewIndexPage() *IndexPage {
 	increaseCounter := NewCounterAction(1)
+	increase10Counter := NewCounterAction(10)
 	increaseCounterButtonID := uuid.New().String()
 	decreaseCounter := NewCounterAction(-1)
 	decreaseCounterButtonID := uuid.New().String()
@@ -28,6 +29,14 @@ func NewIndexPage() *IndexPage {
 		Title: "Index Page",
 		IncreaseCounterButton: components.NewButton(increaseCounterButtonID, components.NewText("+"), components.ButtonOptions{
 			OnClick: server.CreateEventHandler(increaseCounter, increaseCounterButtonID, func(action types.Action, ctx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+				ctx.State.Counter += serverutils.ReadPayload[int](action)
+				server.SendCaller(socket.Action[string, ActionContext]{
+					Type:    "replaceHtml::#counter li",
+					Payload: fmt.Sprintf("<p>%v</p>", ctx.State.Counter),
+					Context: ctx,
+				})
+			}),
+			OnStrgClick: server.CreateEventHandler(increase10Counter, increaseCounterButtonID, func(action types.Action, ctx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 				ctx.State.Counter += serverutils.ReadPayload[int](action)
 				server.SendCaller(socket.Action[string, ActionContext]{
 					Type:    "replaceHtml::#counter li",
