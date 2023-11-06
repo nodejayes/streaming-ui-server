@@ -1,6 +1,7 @@
 package components
 
 import (
+	"github.com/google/uuid"
 	"github.com/nodejayes/streaming-ui-server/server/ui"
 	"github.com/nodejayes/streaming-ui-server/server/ui/types"
 	"github.com/nodejayes/streaming-ui-server/server/ui/utils"
@@ -8,47 +9,38 @@ import (
 
 type (
 	ButtonOptions struct {
-		OnClick     types.Action
-		OnStrgClick types.Action
+		OnClick func(eID string) types.Action
 	}
 	Button struct {
 		utils.ViewHelper
 		Id      string
 		Content types.Component
-		Options ButtonOptions
+		Options struct {
+			OnClick types.Action
+		}
 	}
 )
 
-func NewButton(id string, content types.Component, options ButtonOptions) *Button {
+func NewButton(content types.Component, options ButtonOptions) *Button {
+	id := uuid.New().String()
 	return &Button{
 		Id:      id,
 		Content: content,
-		Options: options,
+		Options: struct {
+			OnClick types.Action
+		}{
+			OnClick: options.OnClick(id),
+		},
 	}
 }
 
 func (ctx *Button) Render() string {
 	return ui.Render(`
-{{ if .Options.OnStrgClick }}
-	<script>
-		function strgFilter(e) {
-			return e.ctrlKey;
-		}
-	</script>
-{{ end }}
 <button
 		id="{{ .Id }}"
 		{{ if .Options.OnClick }}
 			lrClickAction="{{ .EventType .Options.OnClick }}"
-			lrClickPayload="{{ .EventPayload .Options.OnClick }}"
 		{{ end }}
-		lrClickDelay="500"
-		{{ if .Options.OnStrgClick }}
-			lrClickFilter="strgFilter"
-			{{ if not (eq .Options.OnStrgClick.GetType .Options.OnClick.GetType) }}
-			lrClickFilterAction="{{ .EventType .Options.OnStrgClick }}"
-			{{ end }}
-			lrClickFilterPayload="{{ .EventPayload .Options.OnStrgClick }}"
-		{{ end }}
+		lrClickDelay="250"
 	>{{ .Component .Content }}</button>`, ctx)
 }

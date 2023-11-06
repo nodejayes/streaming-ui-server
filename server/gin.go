@@ -122,35 +122,37 @@ func RegisterAction[TAction types.Action, TContext any](action TAction) {
 	})
 }
 
-func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, eID string, handler func(action types.Action, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) types.Action {
-	actionHandlerMutex.Lock()
-	defer actionHandlerMutex.Unlock()
-	actionKey := getActionKey(action, &eID)
-	handlers, ok := actionHandlers[actionKey]
-	if !ok {
-		handlers = make([]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any), 0)
-	}
-	handlers = append(handlers, func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
-		ctxConverted, ok := ctx.(TContext)
+func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, handler func(action types.Action, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) func(eID string) types.Action {
+	return func(eID string) types.Action {
+		actionHandlerMutex.Lock()
+		defer actionHandlerMutex.Unlock()
+		actionKey := getActionKey(action, &eID)
+		handlers, ok := actionHandlers[actionKey]
 		if !ok {
-			fmt.Println(fmt.Sprintf("Error on convert Context: %v", ok))
-			return
+			handlers = make([]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any), 0)
 		}
-		var convertedEventData TEventData
-		str, err := json.Marshal(eventData)
-		if err != nil {
-			fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
-			return
-		}
-		err = json.Unmarshal(str, &convertedEventData)
-		if err != nil {
-			fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
-			return
-		}
-		handler(action, ctxConverted, elementID, inputs, convertedEventData)
-	})
-	actionHandlers[actionKey] = handlers
-	return action
+		handlers = append(handlers, func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
+			ctxConverted, ok := ctx.(TContext)
+			if !ok {
+				fmt.Println(fmt.Sprintf("Error on convert Context: %v", ok))
+				return
+			}
+			var convertedEventData TEventData
+			str, err := json.Marshal(eventData)
+			if err != nil {
+				fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
+				return
+			}
+			err = json.Unmarshal(str, &convertedEventData)
+			if err != nil {
+				fmt.Println(fmt.Sprintf("Error on convert EventData: %v", err.Error()))
+				return
+			}
+			handler(action, ctxConverted, elementID, inputs, convertedEventData)
+		})
+		actionHandlers[actionKey] = handlers
+		return action
+	}
 }
 
 func Run(addr ...string) {

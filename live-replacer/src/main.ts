@@ -2,10 +2,12 @@ import { ClientIdStore } from "./client-id";
 import { Socket } from "./socket";
 import { replaceElements } from "./incoming";
 import { render } from "./rendering";
+import { FilterStore } from "./filter";
 
 const CLIENT_ID_KEY = "clientId";
 const IDENTITY_LOCATION = "/identity";
 const WS_LOCATION = "ws://localhost:40000/ws";
+(window as any).Filters = FilterStore;
 
 (async function () {
   const clientStorage = new ClientIdStore(CLIENT_ID_KEY, IDENTITY_LOCATION);

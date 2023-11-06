@@ -17,7 +17,6 @@ type (
 	}
 	Action interface {
 		GetType() string
-		GetPayload() any
 	}
 	Renderer interface {
 		Render() string

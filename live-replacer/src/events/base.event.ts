@@ -1,10 +1,10 @@
 import { EventData } from "./types";
+import {FilterStore} from "../filter";
 
 interface ApiMessage {
     elementId: string;
     action: {
         type: string;
-        payload: any
     },
     inputs?: {[key: string]: {[key: string]: string}},
     eventData?: EventData,
@@ -75,27 +75,20 @@ export class BaseEvent {
     }
 
     private buildMessage(target: HTMLElement, eventName: string, elementId: string, action: string, eventData: EventData, originalEvent: any): ApiMessage | null {
-        const payloadName = `lr${eventName}payload`;
         const inputsName = `lr${eventName}inputs`;
         const filterName = `lr${eventName}Filter`;
         const filterActionName = `lr${eventName}FilterAction`;
-        const filterPayloadName = `lr${eventName}FilterPayload`;
 
         const msg: ApiMessage = {
             elementId,
             action: {
                 type: action,
-                payload: null,
             },
             inputs: {},
             eventData,
         };
 
-        const payload = target.getAttribute(payloadName) ?? null;
         const inputSelectors: string | null = target.getAttribute(inputsName) ?? null;
-        if (payload) {
-            msg.action.payload = JSON.parse(payload ?? "null");
-        }
         if (inputSelectors) {
             const selectors = inputSelectors.split("<=>");
             const inputData: { [key: string]: { [key: string]: string } } = {};
@@ -117,19 +110,15 @@ export class BaseEvent {
         }
 
         const filterFn = target.getAttribute(filterName);
-        if (filterFn && typeof (global as any)[filterFn] === "function") {
+        if (filterFn && typeof FilterStore.get(filterFn) === "function") {
             const filterAction = target.getAttribute(filterActionName);
-            const filterPayload = target.getAttribute(filterPayloadName);
-            if ((global as any)[filterFn](originalEvent)) {
+            const fn = FilterStore.get(filterFn);
+            if (fn ? fn(originalEvent) : false) {
                 if (filterAction) {
                     msg.action.type = filterAction;
                 }
-                if (filterPayload) {
-                    msg.action.payload = JSON.parse(filterPayload) ?? null;
-                }
             } else {
                 if (!filterAction) {
-                    console.info('not found filter');
                     return null;
                 }
             }

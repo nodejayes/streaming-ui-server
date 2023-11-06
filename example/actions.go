@@ -2,19 +2,16 @@ package example
 
 type (
 	PingAction struct {
-		Type    string `json:"type"`
-		Payload string `json:"payload"`
+		Type string `json:"type"`
 	}
 	CounterAction struct {
-		Type    string `json:"type"`
-		Payload int    `json:"payload"`
+		Type string `json:"type"`
 	}
 )
 
-func NewPingAction(payload string) *PingAction {
+func NewPingAction() *PingAction {
 	return &PingAction{
-		Type:    "ping",
-		Payload: payload,
+		Type: "ping",
 	}
 }
 
@@ -22,21 +19,12 @@ func (ctx *PingAction) GetType() string {
 	return ctx.Type
 }
 
-func (ctx *PingAction) GetPayload() any {
-	return ctx.Payload
-}
-
-func NewCounterAction(payload int) *CounterAction {
+func NewCounterAction() *CounterAction {
 	return &CounterAction{
-		Type:    "count increase",
-		Payload: payload,
+		Type: "count increase",
 	}
 }
 
 func (ctx *CounterAction) GetType() string {
 	return ctx.Type
-}
-
-func (ctx *CounterAction) GetPayload() any {
-	return ctx.Payload
 }
