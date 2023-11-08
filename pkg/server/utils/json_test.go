@@ -3,7 +3,7 @@ package utils_test
 import (
 	"testing"
 
-	"github.com/nodejayes/streaming-ui-server/server/utils"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/utils"
 )
 
 type (

@@ -19,6 +19,11 @@
 
 # Go workspace file
 go.work
-pkg/live-replacer/lib
+pkg/live-replacer/lib/*.ts
+pkg/live-replacer/lib/*.map
 pkg/live-replacer/node_modules
 tmp
+/pkg/live-replacer/lib/events/base.event.d.ts
+/pkg/live-replacer/lib/events/click.event.d.ts
+/pkg/live-replacer/lib/events/handlercreator.d.ts
+/pkg/live-replacer/lib/events/types.d.ts
