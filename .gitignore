@@ -19,9 +19,6 @@
 
 # Go workspace file
 go.work
-timetracker
-ui
-!server/ui
-live-replacer/lib
-live-replacer/node_modules
+pkg/live-replacer/lib
+pkg/live-replacer/node_modules
 tmp

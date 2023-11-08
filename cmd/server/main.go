@@ -3,8 +3,8 @@ package main
 import (
 	"github.com/gin-gonic/gin"
 	di "github.com/nodejayes/generic-di"
-	"github.com/nodejayes/streaming-ui-server/example"
-	"github.com/nodejayes/streaming-ui-server/server"
+	"github.com/nodejayes/streaming-ui-server/cmd/server/example"
+	"github.com/nodejayes/streaming-ui-server/pkg/server"
 )
 
 func main() {

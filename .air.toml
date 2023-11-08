@@ -5,7 +5,7 @@ tmp_dir = "tmp"
 [build]
   args_bin = []
   bin = "tmp\\main.exe"
-  cmd = "go generate live-replacer/script.go && go build -o ./tmp/main.exe ."
+  cmd = "go generate pkg/live-replacer/script.go && go build cmd/server/main.go -o ./tmp/main.exe ."
   delay = 500
   exclude_dir = ["assets", "tmp", "vendor", "testdata"]
   exclude_file = []

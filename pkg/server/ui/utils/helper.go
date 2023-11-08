@@ -3,7 +3,7 @@ package utils
 import (
 	"html/template"
 
-	"github.com/nodejayes/streaming-ui-server/server/ui/types"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
 )
 
 type ViewHelper struct{}

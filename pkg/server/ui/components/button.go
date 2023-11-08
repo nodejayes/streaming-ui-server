@@ -2,9 +2,9 @@ package components
 
 import (
 	"github.com/google/uuid"
-	"github.com/nodejayes/streaming-ui-server/server/ui"
-	"github.com/nodejayes/streaming-ui-server/server/ui/types"
-	"github.com/nodejayes/streaming-ui-server/server/ui/utils"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/utils"
 )
 
 type (

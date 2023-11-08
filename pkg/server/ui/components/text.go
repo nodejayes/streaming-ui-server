@@ -1,6 +1,6 @@
 package components
 
-import "github.com/nodejayes/streaming-ui-server/server/ui"
+import "github.com/nodejayes/streaming-ui-server/pkg/server/ui"
 
 type Text struct {
 	Value string

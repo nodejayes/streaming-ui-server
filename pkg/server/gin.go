@@ -11,10 +11,10 @@ import (
 	"github.com/gin-gonic/gin"
 	event_emitter "github.com/nodejayes/event-emitter"
 	di "github.com/nodejayes/generic-di"
-	livereplacer "github.com/nodejayes/streaming-ui-server/live-replacer"
-	"github.com/nodejayes/streaming-ui-server/server/identity"
-	"github.com/nodejayes/streaming-ui-server/server/socket"
-	"github.com/nodejayes/streaming-ui-server/server/ui/types"
+	livereplacer "github.com/nodejayes/streaming-ui-server/pkg/live-replacer"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/identity"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/socket"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
 )
 
 func init() {
