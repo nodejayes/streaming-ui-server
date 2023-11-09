@@ -4,6 +4,26 @@ type (
 	BaseEventData struct {
 		Typ string `json:"typ"`
 	}
+	KeyboardEventData struct {
+		CtrlKey          bool   `json:"ctrlKey"`
+		AltKey           bool   `json:"altKey"`
+		ShiftKey         bool   `json:"shiftKey"`
+		Key              string `json:"key"`
+		Repeat           bool   `json:"repeat"`
+		Code             string `json:"code"`
+		IsComposing      bool   `json:"isComposing"`
+		Location         int    `json:"location"`
+		MetaKey          bool   `json:"metaKey"`
+		Detail           int    `json:"detail"`
+		EventTyp         string `json:"type"`
+		TimeStamp        int    `json:"timeStamp"`
+		Bubbles          bool   `json:"bubbles"`
+		Cancelable       bool   `json:"cancelable"`
+		Composed         bool   `json:"composed"`
+		EventPhase       int    `json:"eventPhase"`
+		IsTrusted        bool   `json:"isTrusted"`
+		DefaultPrevented bool   `json:"defaultPrevented"`
+	}
 	MouseEventData struct {
 		CtrlKey          bool   `json:"ctrlKey"`
 		AltKey           bool   `json:"altKey"`
@@ -36,7 +56,7 @@ type (
 		BaseEventData
 		CtrlKey            bool    `json:"ctrlKey"`
 		AltKey             bool    `json:"altKey"`
-		ShiftKey           int     `json:"shiftKey"`
+		ShiftKey           bool    `json:"shiftKey"`
 		IsPrimary          bool    `json:"isPrimary"`
 		ClientX            int     `json:"clientX"`
 		ClientY            int     `json:"clientY"`

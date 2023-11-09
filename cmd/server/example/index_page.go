@@ -2,6 +2,7 @@ package example
 
 import (
 	"fmt"
+
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/socket"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
@@ -82,7 +83,7 @@ func (ctx *IndexPage) Render() string {
 			</ul>
 			{{ .Component .IncreaseCounterButton }}
 			{{ .Component .DecreaseCounterButton }}
-			<div style="width:150px;height:150px;background-color:green;" lrmousemove="count increase">
+			<div style="width:150px;height:150px;background-color:green;" lrmouseupaction="count increase">
 			</div>
 		</body>
 	</html>`, ctx)

@@ -61,4 +61,25 @@ export interface MouseEventData extends BaseEventData {
     defaultPrevented: boolean;
 }
 
-export type EventData = ClickEventData | MouseEventData;
+export interface KeyboardEventData extends BaseEventData {
+    ctrlKey: boolean;
+    altKey: boolean;
+    shiftKey: boolean;
+    key: string;
+    repeat: boolean;
+    code: string;
+    isComposing: boolean;
+    location: number;
+    metaKey: boolean;
+    detail: number;
+    type: string;
+    timeStamp: number;
+    bubbles: boolean;
+    cancelable: boolean;
+    composed: boolean;
+    eventPhase: number;
+    isTrusted: boolean;
+    defaultPrevented: boolean;
+}
+
+export type EventData = ClickEventData | MouseEventData | KeyboardEventData;
