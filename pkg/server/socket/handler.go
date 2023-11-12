@@ -22,7 +22,7 @@ var upgrader = websocket.Upgrader{
 	EnableCompression: true,
 }
 
-func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error)) func(ctx *gin.Context) {
+func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error), stateCleaner func(clientID string)) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 		if err != nil {
@@ -51,6 +51,7 @@ func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any,
 			if err != nil {
 				println(fmt.Sprintf("error in socket handler: %s", err.Error()))
 				utils.EmitCleanupHandler(pageID)
+				stateCleaner(clientID)
 				sessionFactory.RemoveSession(clientID)
 				return
 			}

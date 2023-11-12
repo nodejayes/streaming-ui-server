@@ -25,6 +25,7 @@ func init() {
 }
 
 var contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error)
+var stateCleaner func(clientID string)
 var actionHandlerMutex = &sync.Mutex{}
 var actionHandlers = make(map[string][]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any))
 
@@ -44,7 +45,7 @@ func New() *gin.Engine {
 	router := gin.Default()
 	router.StaticFS("/live-replacer", http.FS(livereplacer.Files))
 	router.GET("/identity", identity.Handle)
-	router.GET("/ws", socket.Handle(contextCreator))
+	router.GET("/ws", socket.Handle(contextCreator, stateCleaner))
 	return router
 }
 
@@ -59,6 +60,10 @@ func CreateActionContext[T any](creator func(clientID, pageID string, ctx *gin.C
 	contextCreator = func(clientID, pageID string, ctx *gin.Context) (any, error) {
 		return creator(clientID, pageID, ctx)
 	}
+}
+
+func CreateCleanup(cleaner func(clientID string)) {
+	stateCleaner = cleaner
 }
 
 func SendCaller[TPayload any, TContext ClientIdentiy](action socket.Action[TPayload, TContext]) {
@@ -109,6 +114,8 @@ func OnAction[TAction types.Action, TContext any](actionInstance TAction, execut
 
 func AddPage[T types.Page](pageCreator func() T) {
 	initPage := pageCreator()
+	// destroy the Event handler we not use it for this page instance
+	cleanupHandler(initPage.GetID())
 	di.Inject[gin.Engine]().GET(initPage.GetPath(), func(ctx *gin.Context) {
 		page := pageCreator()
 		pageStr := page.Render()

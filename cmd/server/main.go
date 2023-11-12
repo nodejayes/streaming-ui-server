@@ -16,6 +16,10 @@ func main() {
 		}, nil
 	})
 
+	server.CreateCleanup(func(clientID string) {
+		di.Destroy[example.AppState](clientID)
+	})
+
 	server.RegisterAction[*example.CounterAction, example.ActionContext](example.NewCounterAction())
 	server.RegisterAction[*example.PingAction, example.ActionContext](example.NewPingAction())
 
