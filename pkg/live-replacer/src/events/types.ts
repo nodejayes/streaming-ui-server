@@ -82,4 +82,13 @@ export interface KeyboardEventData extends BaseEventData {
     defaultPrevented: boolean;
 }
 
-export type EventData = ClickEventData | MouseEventData | KeyboardEventData;
+export interface ScrollEventData extends BaseEventData {
+}
+
+export interface BlurEventData extends BaseEventData {
+}
+
+export interface FocusEventData extends BaseEventData {
+}
+
+export type EventData = ClickEventData | MouseEventData | KeyboardEventData | ScrollEventData;

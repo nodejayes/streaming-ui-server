@@ -5,7 +5,7 @@ export class Socket {
 
   async openWebSocket(): Promise<WsApi> {
     return new Promise((resolve) => {
-      const ws = new WebSocket(`${this.wsLocation}?clientId=${this.clientIdStore.getClientId()}`);
+      const ws = new WebSocket(`${this.wsLocation}?clientId=${this.clientIdStore.getClientId()}&pageId=${localStorage.getItem('pageId')}`);
       const api = {
         send: (data: any) => ws.send(JSON.stringify(data)),
         onMessage: (_ev: MessageEvent<any>) => {},

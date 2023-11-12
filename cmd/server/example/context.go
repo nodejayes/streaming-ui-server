@@ -1,10 +1,15 @@
 package example
 
 type ActionContext struct {
-	ID    string
-	State *AppState
+	PageID   string
+	ClientID string
+	State    *AppState
 }
 
 func (ctx ActionContext) GetClientId() string {
-	return ctx.ID
+	return ctx.ClientID
+}
+
+func (ctx ActionContext) GetPageId() string {
+	return ctx.PageID
 }

@@ -7,8 +7,10 @@ import (
 )
 
 type ParseSocketMessageArguments struct {
-	Message []byte
-	Context any
+	Message  []byte
+	Context  any
+	ClientID string
+	PageID   string
 }
 
 var ParseSocketMessageEvent = event_emitter.Event[ParseSocketMessageArguments, ParseSocketMessageArguments]{

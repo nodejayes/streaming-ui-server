@@ -5,6 +5,11 @@ export async function replaceElements(action: Action<string>) {
         if (!elements) {
             return;
         }
-        elements.forEach((element) => (element.innerHTML = action.payload ?? ""));
+        elements.forEach((element) => {
+            if (!element) {
+                return;
+            }
+            element.innerHTML = action.payload ?? "";
+        });
     }
 }

@@ -4,7 +4,17 @@ type (
 	BaseEventData struct {
 		Typ string `json:"typ"`
 	}
+	FocusEventData struct {
+		BaseEventData
+	}
+	BlurEventData struct {
+		BaseEventData
+	}
+	ScrollEventData struct {
+		BaseEventData
+	}
 	KeyboardEventData struct {
+		BaseEventData
 		CtrlKey          bool   `json:"ctrlKey"`
 		AltKey           bool   `json:"altKey"`
 		ShiftKey         bool   `json:"shiftKey"`
@@ -25,6 +35,7 @@ type (
 		DefaultPrevented bool   `json:"defaultPrevented"`
 	}
 	MouseEventData struct {
+		BaseEventData
 		CtrlKey          bool   `json:"ctrlKey"`
 		AltKey           bool   `json:"altKey"`
 		ShiftKey         bool   `json:"shiftKey"`
@@ -86,6 +97,7 @@ type (
 		Renderer
 	}
 	Page interface {
+		GetID() string
 		GetPath() string
 		Renderer
 	}

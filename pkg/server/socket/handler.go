@@ -1,6 +1,7 @@
 package socket
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
@@ -8,6 +9,7 @@ import (
 	"github.com/gorilla/websocket"
 	event_emitter "github.com/nodejayes/event-emitter"
 	di "github.com/nodejayes/generic-di"
+	"github.com/nodejayes/streaming-ui-server/pkg/server/utils"
 )
 
 var upgrader = websocket.Upgrader{
@@ -20,7 +22,7 @@ var upgrader = websocket.Upgrader{
 	EnableCompression: true,
 }
 
-func Handle(contextCreator func(clientId string, ctx *gin.Context) (any, error)) func(ctx *gin.Context) {
+func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error)) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 		if err != nil {
@@ -30,28 +32,33 @@ func Handle(contextCreator func(clientId string, ctx *gin.Context) (any, error))
 		defer func() {
 			_ = conn.Close()
 		}()
-		clientId := ctx.Query("clientId")
-		if len(clientId) < 1 {
-			log.Printf("abort connection invalid clientId %s", clientId)
+		clientID := ctx.Query("clientId")
+		if len(clientID) < 1 {
+			log.Printf("abort connection invalid clientId %s", clientID)
 			return
 		}
-		actionContext, err := contextCreator(clientId, ctx)
+		pageID := ctx.Query("pageId")
+		actionContext, err := contextCreator(clientID, pageID, ctx)
 		if err != nil {
 			log.Printf("abort connection invalid contextCreator %s", err.Error())
 			return
 		}
-		socket := NewSocket(conn, clientId)
+		socket := NewSocket(conn, clientID)
 		sessionFactory := di.Inject[factory]()
-		sessionFactory.AddSession(clientId, socket)
+		sessionFactory.AddSession(clientID, socket)
 		for {
 			_, p, err := conn.ReadMessage()
 			if err != nil {
-				sessionFactory.RemoveSession(clientId)
+				println(fmt.Sprintf("error in socket handler: %s", err.Error()))
+				utils.EmitCleanupHandler(pageID)
+				sessionFactory.RemoveSession(clientID)
 				return
 			}
 			event_emitter.Emit(ParseSocketMessageEvent, ParseSocketMessageArguments{
-				Message: p,
-				Context: actionContext,
+				Message:  p,
+				Context:  actionContext,
+				ClientID: clientID,
+				PageID:   pageID,
 			})
 		}
 	}
