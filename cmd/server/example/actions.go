@@ -7,6 +7,9 @@ type (
 	CounterAction struct {
 		Type string `json:"type"`
 	}
+	ReloadAction struct {
+		Type string
+	}
 )
 
 func NewPingAction() *PingAction {
@@ -26,5 +29,15 @@ func NewCounterAction() *CounterAction {
 }
 
 func (ctx *CounterAction) GetType() string {
+	return ctx.Type
+}
+
+func NewReloadAction() *ReloadAction {
+	return &ReloadAction{
+		Type: "reload",
+	}
+}
+
+func (ctx *ReloadAction) GetType() string {
 	return ctx.Type
 }

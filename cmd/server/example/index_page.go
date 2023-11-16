@@ -4,7 +4,6 @@ import (
 	"github.com/google/uuid"
 	di "github.com/nodejayes/generic-di"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
-	"github.com/nodejayes/streaming-ui-server/pkg/server/socket"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/components"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
@@ -16,6 +15,7 @@ type IndexPage struct {
 	utils.ViewHelper
 	Title                 string
 	OnLoad                func(eID string) types.Action
+	ReloadButton          types.Component
 	IncreaseCounterButton types.Component
 	DecreaseCounterButton types.Component
 	CounterDisplay        types.Component
@@ -25,6 +25,7 @@ func NewIndexPage() *IndexPage {
 	page := &IndexPage{}
 	page.ID = uuid.NewString()
 	page.Title = "Index Page"
+	page.ReloadButton = page.GetReloadButton()
 	page.IncreaseCounterButton = page.GetIncreaseCounterButton()
 	page.DecreaseCounterButton = page.GetDecreaseCounterButton()
 	page.CounterDisplay = page.GetCounterDisplay()
@@ -35,38 +36,44 @@ func (ctx *IndexPage) GetPath() string {
 	return "/"
 }
 
-func (ctx *IndexPage) GetIncreaseCounterButton() types.Component {
-	increaseCounter := NewCounterAction()
+func (ctx *IndexPage) GetReloadButton() types.Component {
 	return components.NewButton(components.NewText("+"), components.ButtonOptions{
-		OnClick: server.CreateEventHandler(increaseCounter, ctx.ID, func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		OnClick: server.CreateEventHandler(NewReloadAction(), ctx.ID, func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+			server.SendCaller(server.NewRedirectAction("/", actx))
+		}),
+	})
+}
+
+func (ctx *IndexPage) GetIncreaseCounterButton() types.Component {
+	return components.NewButton(components.NewText("+"), components.ButtonOptions{
+		Style: &utils.Style{
+			BackgroundColor: "blue",
+			Color:           "grey",
+		},
+		OnClick: server.CreateEventHandler(NewCounterAction(), ctx.ID, func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 			if eventData.CtrlKey {
 				actx.State.Counter += 10
 			} else {
 				actx.State.Counter += 1
 			}
-			server.SendCaller(socket.Action[string, ActionContext]{
-				Type:    "replaceHtml::#counters",
-				Payload: ctx.GetCounterDisplay().Render(),
-				Context: actx,
-			})
+			server.SendCaller(server.NewReplaceHtmlAction("#counters", ctx.GetCounterDisplay(), actx))
 		}),
 	})
 }
 
 func (ctx *IndexPage) GetDecreaseCounterButton() types.Component {
-	decreaseCounter := NewCounterAction()
 	return components.NewButton(components.NewText("-"), components.ButtonOptions{
-		OnClick: server.CreateEventHandler(decreaseCounter, ctx.ID, func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		Style: &utils.Style{
+			BackgroundColor: "red",
+			Color:           "grey",
+		},
+		OnClick: server.CreateEventHandler(NewCounterAction(), ctx.ID, func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 			if eventData.CtrlKey {
 				actx.State.Counter -= 10
 			} else {
 				actx.State.Counter -= 1
 			}
-			server.SendCaller(socket.Action[string, ActionContext]{
-				Type:    "replaceHtml::#counters",
-				Payload: ctx.GetCounterDisplay().Render(),
-				Context: actx,
-			})
+			server.SendCaller(server.NewReplaceHtmlAction("#counters", ctx.GetCounterDisplay(), actx))
 		}),
 	})
 }
@@ -87,6 +94,7 @@ func (ctx *IndexPage) Render() string {
 		<body>
 			<div id="header">
 				<h1>{{ .Title }}</h1>
+				{{ .Component .ReloadButton }}
 			</div>
 			<div id="counters">
 				{{ .Component .CounterDisplay }}

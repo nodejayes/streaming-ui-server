@@ -21,6 +21,7 @@ func main() {
 	})
 
 	server.RegisterAction[*example.CounterAction, example.ActionContext](example.NewCounterAction())
+	server.RegisterAction[*example.ReloadAction, example.ActionContext](example.NewReloadAction())
 	server.RegisterAction[*example.PingAction, example.ActionContext](example.NewPingAction())
 
 	server.AddPage(example.NewIndexPage)

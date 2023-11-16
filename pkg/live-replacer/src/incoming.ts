@@ -12,4 +12,10 @@ export async function replaceElements(action: Action<string>) {
             element.innerHTML = action.payload ?? "";
         });
     }
+    if (action.type.startsWith("redirect::")) {
+        const url = action.payload;
+        if (url) {
+            window.location.href = url;
+        }
+    }
 }

@@ -9,6 +9,7 @@ import (
 
 type (
 	ButtonOptions struct {
+		Style   *utils.Style
 		OnClick func(eID string) types.Action
 	}
 	Button struct {
@@ -16,6 +17,7 @@ type (
 		Id      string
 		Content types.Component
 		Options struct {
+			Style   *utils.Style
 			OnClick types.Action
 		}
 	}
@@ -27,8 +29,10 @@ func NewButton(content types.Component, options ButtonOptions) *Button {
 		Id:      id,
 		Content: content,
 		Options: struct {
+			Style   *utils.Style
 			OnClick types.Action
 		}{
+			Style:   options.Style,
 			OnClick: options.OnClick(id),
 		},
 	}
@@ -38,6 +42,9 @@ func (ctx *Button) Render() string {
 	return ui.Render(`
 <button
 		id="{{ .Id }}"
+		{{ if .Options.Style }}
+			style="{{ .GetStyle .Options.Style }}"
+		{{ end }}
 		{{ if .Options.OnClick }}
 			lrClickAction="{{ .EventType .Options.OnClick }}"
 		{{ end }}
