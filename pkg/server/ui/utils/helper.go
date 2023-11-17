@@ -13,8 +13,8 @@ func (ctx ViewHelper) Component(component types.Component) template.HTML {
 	return template.HTML(component.Render())
 }
 
-func (ctx ViewHelper) EventType(action types.Action) string {
-	return action.GetType()
+func (ctx ViewHelper) EventType(action func(eID string) types.Action, elementID string) string {
+	return action(elementID).GetType()
 }
 
 func (ctx ViewHelper) GetStyle(style *Style) template.CSS {

@@ -56,6 +56,10 @@ func getActionKey(action types.Action, pageID string, elementID *string) string 
 	return fmt.Sprintf("%s_%s_%s", pageID, action.GetType(), *elementID)
 }
 
+func Engine() *gin.Engine {
+	return di.Inject[gin.Engine]()
+}
+
 func CreateActionContext[T any](creator func(clientID, pageID string, ctx *gin.Context) (T, error)) {
 	contextCreator = func(clientID, pageID string, ctx *gin.Context) (any, error) {
 		return creator(clientID, pageID, ctx)

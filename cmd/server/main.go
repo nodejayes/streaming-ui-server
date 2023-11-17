@@ -5,6 +5,7 @@ import (
 	di "github.com/nodejayes/generic-di"
 	"github.com/nodejayes/streaming-ui-server/cmd/server/example"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
+	"net/http"
 )
 
 func main() {
@@ -25,6 +26,10 @@ func main() {
 	server.RegisterAction[*example.PingAction, example.ActionContext](example.NewPingAction())
 
 	server.AddPage(example.NewIndexPage)
+
+	server.Engine().GET("test", func(ctx *gin.Context) {
+		ctx.Data(http.StatusOK, "application/json", []byte("Test"))
+	})
 
 	server.Run(":40000")
 }

@@ -6,19 +6,19 @@ import (
 )
 
 type Style struct {
-	Padding         string
-	Margin          string
-	Color           string
 	BackgroundColor string
-	Font            string
-	FontWeight      string
-	FontSize        string
-	FontFamily      string
 	Border          string
 	BorderRadius    string
-	Width           string
-	Height          string
+	Color           string
 	Display         string
+	Font            string
+	FontFamily      string
+	FontSize        string
+	FontWeight      string
+	Height          string
+	Margin          string
+	Padding         string
+	Width           string
 }
 
 func (ctx *Style) GetString() string {

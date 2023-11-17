@@ -63,6 +63,7 @@ func (ctx *IndexPage) GetIncreaseCounterButton() types.Component {
 
 func (ctx *IndexPage) GetDecreaseCounterButton() types.Component {
 	return components.NewButton(components.NewText("-"), components.ButtonOptions{
+		Class: "stdWidth",
 		Style: &utils.Style{
 			BackgroundColor: "red",
 			Color:           "grey",
@@ -90,6 +91,11 @@ func (ctx *IndexPage) Render() string {
 		<head>
 			<title>{{ .Title }}</title>
 			<script src="/live-replacer/lib/bundle.js"></script>
+			<style>
+				.stdWidth {
+					width: 150px;
+				}
+			</style>
 		</head>
 		<body>
 			<div id="header">
