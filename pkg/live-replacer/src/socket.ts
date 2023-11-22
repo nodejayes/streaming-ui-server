@@ -1,11 +1,9 @@
-import { ClientIdStore } from "./client-id";
-
 export class Socket {
-  constructor(private wsLocation: string, private clientIdStore: ClientIdStore) {}
+  constructor(private wsLocation: string) {}
 
   async openWebSocket(): Promise<WsApi> {
     return new Promise((resolve) => {
-      const ws = new WebSocket(`${this.wsLocation}?clientId=${this.clientIdStore.getClientId()}&pageId=${localStorage.getItem('pageId')}`);
+      const ws = new WebSocket(`${this.wsLocation}`);
       const api = {
         send: (data: any) => ws.send(JSON.stringify(data)),
         onMessage: (_ev: MessageEvent<any>) => {},

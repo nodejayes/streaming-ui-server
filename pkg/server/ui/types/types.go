@@ -97,8 +97,6 @@ type (
 		Renderer
 	}
 	Page interface {
-		GetID() string
-		GetPath() string
 		Renderer
 	}
 )

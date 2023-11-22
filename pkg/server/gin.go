@@ -24,7 +24,7 @@ func init() {
 	di.Injectable(New)
 }
 
-var contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error)
+var contextCreator func(clientID string, ctx *gin.Context) (any, error)
 var stateCleaner func(clientID string)
 var actionHandlerMutex = &sync.Mutex{}
 var actionHandlers = make(map[string][]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any))
@@ -49,20 +49,20 @@ func New() *gin.Engine {
 	return router
 }
 
-func getActionKey(action types.Action, pageID string, elementID *string) string {
+func getActionKey(action types.Action, elementID *string) string {
 	if (*elementID) == "" {
 		*elementID = uuid.New().String()
 	}
-	return fmt.Sprintf("%s_%s_%s", pageID, action.GetType(), *elementID)
+	return fmt.Sprintf("%s_%s", action.GetType(), *elementID)
 }
 
 func Engine() *gin.Engine {
 	return di.Inject[gin.Engine]()
 }
 
-func CreateActionContext[T any](creator func(clientID, pageID string, ctx *gin.Context) (T, error)) {
-	contextCreator = func(clientID, pageID string, ctx *gin.Context) (any, error) {
-		return creator(clientID, pageID, ctx)
+func CreateActionContext[T any](creator func(clientID string, ctx *gin.Context) (T, error)) {
+	contextCreator = func(clientID string, ctx *gin.Context) (any, error) {
+		return creator(clientID, ctx)
 	}
 }
 
@@ -98,7 +98,7 @@ func SendTo[TPayload, TContext any](socketSelector func(socket socket.Instance) 
 	}
 }
 
-func OnAction[TAction types.Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext, clientID, pageID, elementID string, inputs map[string]map[string]string, eventData map[string]any)) {
+func OnAction[TAction types.Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any)) {
 	event_emitter.Subscribe(socket.ParseSocketMessageEvent, func(params socket.ParseSocketMessageArguments, _ socket.ParseSocketMessageArguments) {
 		var msg ClientMessage[TAction]
 		err := json.Unmarshal(params.Message, &msg)
@@ -112,26 +112,26 @@ func OnAction[TAction types.Action, TContext any](actionInstance TAction, execut
 		if !ok {
 			return
 		}
-		execution(msg.Action, c, params.ClientID, params.PageID, msg.ElementID, msg.Inputs, msg.EventData)
+		execution(msg.Action, c, params.ClientID, msg.ElementID, msg.Inputs, msg.EventData)
 	})
 }
 
-func AddPage[T types.Page](pageCreator func() T) {
-	initPage := pageCreator()
-	// destroy the Event handler we not use it for this page instance
-	cleanupHandler(initPage.GetID())
-	di.Inject[gin.Engine]().GET(initPage.GetPath(), func(ctx *gin.Context) {
-		page := pageCreator()
+func AddPage[T types.Page](path string, pageCreator func(clientID string) T) {
+	di.Inject[gin.Engine]().GET(path, func(ctx *gin.Context) {
+		clientId, err := ctx.Cookie("ClientId")
+		if err != nil {
+			clientId = uuid.NewString()
+			ctx.SetCookie("ClientId", clientId, 3600, "/", "localhost", false, true)
+		}
+		page := pageCreator(clientId)
 		pageStr := page.Render()
-		pageIdScript := fmt.Sprintf("<script>localStorage.setItem('pageId', '%s');</script>", page.GetID())
-		pageStr = fmt.Sprintf("%s%s", pageIdScript, pageStr)
 		ctx.Data(http.StatusOK, "text/html", []byte(pageStr))
 	})
 }
 
 func RegisterAction[TAction types.Action, TContext any](action TAction) {
-	OnAction[TAction, TContext](action, func(action TAction, ctx TContext, clientID, pageID, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
-		actionKey := getActionKey(action, pageID, &elementID)
+	OnAction[TAction, TContext](action, func(action TAction, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
+		actionKey := getActionKey(action, &elementID)
 		handlers, ok := actionHandlers[actionKey]
 		if !ok {
 			return
@@ -142,22 +142,22 @@ func RegisterAction[TAction types.Action, TContext any](action TAction) {
 	})
 }
 
-func cleanupHandler(pageID string) {
+func cleanupHandler(clientID string) {
 	actionHandlerMutex.Lock()
 	defer actionHandlerMutex.Unlock()
 	for key := range actionHandlers {
-		if !strings.HasPrefix(key, pageID) {
+		if !strings.HasPrefix(key, clientID) {
 			continue
 		}
 		delete(actionHandlers, key)
 	}
 }
 
-func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, pageID string, handler func(action types.Action, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) func(eID string) types.Action {
+func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, handler func(action types.Action, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) func(eID string) types.Action {
 	return func(eID string) types.Action {
 		actionHandlerMutex.Lock()
 		defer actionHandlerMutex.Unlock()
-		actionKey := getActionKey(action, pageID, &eID)
+		actionKey := getActionKey(action, &eID)
 		handlers, ok := actionHandlers[actionKey]
 		if !ok {
 			handlers = make([]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any), 0)

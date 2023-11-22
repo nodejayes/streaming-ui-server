@@ -2,6 +2,7 @@ package socket
 
 import (
 	"encoding/json"
+	"github.com/google/uuid"
 
 	"github.com/gorilla/websocket"
 	event_emitter "github.com/nodejayes/event-emitter"
@@ -9,14 +10,16 @@ import (
 
 type instance struct {
 	id         string
+	clientID   string
 	connection *websocket.Conn
 	reciever   event_emitter.Event[ParseSocketMessageArguments, ParseSocketMessageArguments]
 }
 
-func NewSocket(connection *websocket.Conn, id string) *instance {
+func NewSocket(connection *websocket.Conn, clientID string) *instance {
 	return &instance{
 		connection: connection,
-		id:         id,
+		id:         uuid.NewString(),
+		clientID:   clientID,
 		reciever:   ParseSocketMessageEvent,
 	}
 }
@@ -34,5 +37,9 @@ func (ctx *instance) Reciever() event_emitter.Event[ParseSocketMessageArguments,
 }
 
 func (ctx *instance) GetClientId() string {
+	return ctx.clientID
+}
+
+func (ctx *instance) GetSocketID() string {
 	return ctx.id
 }

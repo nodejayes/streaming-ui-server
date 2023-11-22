@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
@@ -21,8 +23,29 @@ var upgrader = websocket.Upgrader{
 	},
 	EnableCompression: true,
 }
+var cleanupMutex = &sync.Mutex{}
+var cleanupSessions = make(map[string]bool)
 
-func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any, error), stateCleaner func(clientID string)) func(ctx *gin.Context) {
+func markForCleanup(clientID string) {
+	cleanupMutex.Lock()
+	defer cleanupMutex.Unlock()
+	cleanupSessions[clientID] = false
+}
+
+func unmarkCleanup(clientID string) {
+	cleanupMutex.Lock()
+	defer cleanupMutex.Unlock()
+	delete(cleanupSessions, clientID)
+}
+
+func existInCleanup(clientID string) bool {
+	cleanupMutex.Lock()
+	defer cleanupMutex.Unlock()
+	_, ok := cleanupSessions[clientID]
+	return ok
+}
+
+func Handle(contextCreator func(clientID string, ctx *gin.Context) (any, error), stateCleaner func(clientID string)) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 		if err != nil {
@@ -32,13 +55,15 @@ func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any,
 		defer func() {
 			_ = conn.Close()
 		}()
-		clientID := ctx.Query("clientId")
-		if len(clientID) < 1 {
+		clientID, err := ctx.Cookie("ClientId")
+		if len(clientID) < 1 || err != nil {
 			log.Printf("abort connection invalid clientId %s", clientID)
 			return
 		}
-		pageID := ctx.Query("pageId")
-		actionContext, err := contextCreator(clientID, pageID, ctx)
+		if existInCleanup(clientID) {
+			unmarkCleanup(clientID)
+		}
+		actionContext, err := contextCreator(clientID, ctx)
 		if err != nil {
 			log.Printf("abort connection invalid contextCreator %s", err.Error())
 			return
@@ -50,16 +75,20 @@ func Handle(contextCreator func(clientID, pageID string, ctx *gin.Context) (any,
 			_, p, err := conn.ReadMessage()
 			if err != nil {
 				println(fmt.Sprintf("error in socket handler: %s", err.Error()))
-				utils.EmitCleanupHandler(pageID)
-				stateCleaner(clientID)
-				sessionFactory.RemoveSession(clientID)
+				utils.EmitCleanupHandler(clientID)
+				markForCleanup(clientID)
+				time.AfterFunc(5*time.Second, func() {
+					if existInCleanup(clientID) {
+						stateCleaner(clientID)
+					}
+				})
+				sessionFactory.RemoveSession(socket.GetSocketID())
 				return
 			}
 			event_emitter.Emit(ParseSocketMessageEvent, ParseSocketMessageArguments{
 				Message:  p,
 				Context:  actionContext,
 				ClientID: clientID,
-				PageID:   pageID,
 			})
 		}
 	}
