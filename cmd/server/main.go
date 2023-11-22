@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	// use this first!
 	server.CreateActionContext(func(clientID string, ctx *gin.Context) (example.ActionContext, error) {
 		return example.ActionContext{
 			ClientID: clientID,
