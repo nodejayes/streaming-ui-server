@@ -6,9 +6,16 @@ import (
 	"github.com/nodejayes/streaming-ui-server/cmd/server/example"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
 	"net/http"
+	"time"
 )
 
 func main() {
+	server.Configure(server.ServerOptions{
+		StateCleanupTime: 60 * time.Second,
+		SessionLifetime:  3600,
+		SecureCookie:     true,
+	})
+
 	server.CreateActionContext(func(clientID string, ctx *gin.Context) (example.ActionContext, error) {
 		return example.ActionContext{
 			ClientID: clientID,

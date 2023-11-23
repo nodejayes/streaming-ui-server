@@ -14,8 +14,8 @@ func NewReplaceHtmlAction[TContext any](selector string, template types.Componen
 	}
 }
 
-func NewRedirectAction(url string, ctx ClientIdentiy) socket.Action[string, ClientIdentiy] {
-	return socket.Action[string, ClientIdentiy]{
+func NewRedirectAction(url string, ctx ClientIdentity) socket.Action[string, ClientIdentity] {
+	return socket.Action[string, ClientIdentity]{
 		Type:    "redirect::",
 		Payload: url,
 		Context: ctx,

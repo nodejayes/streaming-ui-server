@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -24,13 +25,24 @@ func init() {
 	di.Injectable(New)
 }
 
+type ServerOptions struct {
+	StateCleanupTime time.Duration
+	SessionLifetime  int
+	SecureCookie     bool
+}
+
+var options = ServerOptions{
+	StateCleanupTime: 60 * time.Second,
+	SessionLifetime:  3600,
+	SecureCookie:     true,
+}
 var contextCreator func(clientID string, ctx *gin.Context) (any, error)
 var stateCleaner func(clientID string)
 var actionHandlerMutex = &sync.Mutex{}
 var actionHandlers = make(map[string][]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any))
 
 type (
-	ClientIdentiy interface {
+	ClientIdentity interface {
 		GetClientId() string
 	}
 	ClientMessage[T any] struct {
@@ -41,11 +53,15 @@ type (
 	}
 )
 
+func Configure(serverOptions ServerOptions) {
+	options = serverOptions
+}
+
 func New() *gin.Engine {
 	router := gin.Default()
 	router.StaticFS("/live-replacer", http.FS(livereplacer.Files))
 	router.GET("/identity", identity.Handle)
-	router.GET("/ws", socket.Handle(contextCreator, stateCleaner))
+	router.GET("/ws", socket.Handle(contextCreator, stateCleaner, options.StateCleanupTime))
 	return router
 }
 
@@ -70,7 +86,7 @@ func CreateCleanup(cleaner func(clientID string)) {
 	stateCleaner = cleaner
 }
 
-func SendCaller[TPayload any, TContext ClientIdentiy](action socket.Action[TPayload, TContext]) {
+func SendCaller[TPayload any, TContext ClientIdentity](action socket.Action[TPayload, TContext]) {
 	clientID := action.Context.GetClientId()
 	for _, session := range socket.Factory().GetSessions(func(socket socket.Instance) bool { return socket.GetClientId() == clientID }) {
 		session.Send(socket.Action[any, any]{
@@ -121,7 +137,7 @@ func AddPage[T types.Page](path string, pageCreator func(clientID string) T) {
 		clientId, err := ctx.Cookie("ClientId")
 		if err != nil {
 			clientId = uuid.NewString()
-			ctx.SetCookie("ClientId", clientId, 3600, "/", "localhost", false, true)
+			ctx.SetCookie("ClientId", clientId, int(options.SessionLifetime), ctx.Request.URL.Path, ctx.Request.URL.Host, options.SecureCookie, !options.SecureCookie)
 		}
 		page := pageCreator(clientId)
 		pageStr := page.Render()

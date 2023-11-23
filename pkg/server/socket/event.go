@@ -21,3 +21,11 @@ var ParseSocketMessageEvent = event_emitter.Event[ParseSocketMessageArguments, P
 		log.Printf("[Error %s]: %s", event, err.Error())
 	},
 }
+
+var OnCleanupStateEvent = event_emitter.Event[string, string]{
+	Token: "serverCleanupStateEvent",
+	Handler: func(event string, params string) (string, error) {
+		return params, nil
+	},
+	OnError: func(event string, err error) {},
+}

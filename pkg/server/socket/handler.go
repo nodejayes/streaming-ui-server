@@ -45,7 +45,7 @@ func existInCleanup(clientID string) bool {
 	return ok
 }
 
-func Handle(contextCreator func(clientID string, ctx *gin.Context) (any, error), stateCleaner func(clientID string)) func(ctx *gin.Context) {
+func Handle(contextCreator func(clientID string, ctx *gin.Context) (any, error), stateCleaner func(clientID string), stateCleanupTime time.Duration) func(ctx *gin.Context) {
 	return func(ctx *gin.Context) {
 		conn, err := upgrader.Upgrade(ctx.Writer, ctx.Request, nil)
 		if err != nil {
@@ -77,8 +77,8 @@ func Handle(contextCreator func(clientID string, ctx *gin.Context) (any, error),
 				println(fmt.Sprintf("error in socket handler: %s", err.Error()))
 				utils.EmitCleanupHandler(clientID)
 				markForCleanup(clientID)
-				time.AfterFunc(5*time.Second, func() {
-					if existInCleanup(clientID) {
+				time.AfterFunc(stateCleanupTime, func() {
+					if stateCleaner != nil && existInCleanup(clientID) {
 						stateCleaner(clientID)
 					}
 				})
