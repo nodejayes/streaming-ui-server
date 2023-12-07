@@ -87,7 +87,7 @@ func CreateCleanup(cleaner func(clientID string)) {
 func SendCaller[TPayload any, TContext ClientIdentity](action socket.Action[TPayload, TContext]) {
 	clientID := action.Context.GetClientId()
 	for _, session := range socket.Factory().GetSessions(func(socket socket.Instance) bool { return socket.GetClientId() == clientID }) {
-		session.Send(socket.Action[any, any]{
+		_ = session.Send(socket.Action[any, any]{
 			Type:    action.Type,
 			Payload: action.Payload,
 		})
@@ -96,7 +96,7 @@ func SendCaller[TPayload any, TContext ClientIdentity](action socket.Action[TPay
 
 func SendAll[TPayload, TContext any](action socket.Action[TPayload, TContext]) {
 	for _, session := range socket.Factory().GetSessions(func(socket socket.Instance) bool { return true }) {
-		session.Send(socket.Action[any, any]{
+		_ = session.Send(socket.Action[any, any]{
 			Type:    action.Type,
 			Payload: action.Payload,
 		})
@@ -105,7 +105,7 @@ func SendAll[TPayload, TContext any](action socket.Action[TPayload, TContext]) {
 
 func SendTo[TPayload, TContext any](socketSelector func(socket socket.Instance) bool, action socket.Action[TPayload, TContext]) {
 	for _, session := range socket.Factory().GetSessions(socketSelector) {
-		session.Send(socket.Action[any, any]{
+		_ = session.Send(socket.Action[any, any]{
 			Type:    action.Type,
 			Payload: action.Payload,
 		})
