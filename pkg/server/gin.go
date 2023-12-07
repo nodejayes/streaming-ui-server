@@ -15,7 +15,6 @@ import (
 	event_emitter "github.com/nodejayes/event-emitter"
 	di "github.com/nodejayes/generic-di"
 	livereplacer "github.com/nodejayes/streaming-ui-server/pkg/live-replacer"
-	"github.com/nodejayes/streaming-ui-server/pkg/server/identity"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/socket"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/utils"
@@ -60,7 +59,6 @@ func Configure(serverOptions ServerOptions) {
 func New() *gin.Engine {
 	router := gin.Default()
 	router.StaticFS("/live-replacer", http.FS(livereplacer.Files))
-	router.GET("/identity", identity.Handle)
 	router.GET("/ws", socket.Handle(contextCreator, stateCleaner, options.StateCleanupTime))
 	return router
 }
@@ -132,14 +130,14 @@ func OnAction[TAction types.Action, TContext any](actionInstance TAction, execut
 	})
 }
 
-func AddPage[T types.Page](path string, pageCreator func(clientID string) T) {
+func AddPage[T types.Page](path string, pageCreator func(ctx *gin.Context) T) {
 	di.Inject[gin.Engine]().GET(path, func(ctx *gin.Context) {
 		clientId, err := ctx.Cookie("ClientId")
 		if err != nil {
 			clientId = uuid.NewString()
-			ctx.SetCookie("ClientId", clientId, int(options.SessionLifetime), ctx.Request.URL.Path, ctx.Request.URL.Host, options.SecureCookie, !options.SecureCookie)
+			ctx.SetCookie("ClientId", clientId, options.SessionLifetime, ctx.Request.URL.Path, ctx.Request.URL.Host, options.SecureCookie, !options.SecureCookie)
 		}
-		page := pageCreator(clientId)
+		page := pageCreator(ctx)
 		pageStr := page.Render()
 		ctx.Data(http.StatusOK, "text/html", []byte(pageStr))
 	})

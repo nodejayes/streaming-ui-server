@@ -1,6 +1,7 @@
 package example
 
 import (
+	"github.com/gin-gonic/gin"
 	di "github.com/nodejayes/generic-di"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
@@ -11,7 +12,7 @@ import (
 
 type IndexPage struct {
 	utils.ViewHelper
-	ClientID              string
+	Context               *gin.Context
 	Title                 string
 	OnLoad                func(eID string) types.Action
 	ReloadButton          types.Component
@@ -20,9 +21,9 @@ type IndexPage struct {
 	CounterDisplay        types.Component
 }
 
-func NewIndexPage(clientID string) *IndexPage {
+func NewIndexPage(ctx *gin.Context) *IndexPage {
 	page := &IndexPage{}
-	page.ClientID = clientID
+	page.Context = ctx
 	page.Title = "Index Page"
 	page.ReloadButton = page.GetReloadButton()
 	page.IncreaseCounterButton = page.GetIncreaseCounterButton()
@@ -75,7 +76,11 @@ func (ctx *IndexPage) GetDecreaseCounterButton() types.Component {
 }
 
 func (ctx *IndexPage) GetCounterDisplay() types.Component {
-	state := di.Inject[AppState](ctx.ClientID)
+	clientId, err := ctx.Context.Cookie("ClientId")
+	if err != nil {
+		return components.NewText("Error: " + err.Error())
+	}
+	state := di.Inject[AppState](clientId)
 	return NewCounterDisplayComponent("counter", state.Counter)
 }
 
