@@ -1,114 +1,103 @@
 package example
 
 import (
+	"fmt"
+
+	"github.com/a-h/templ"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	di "github.com/nodejayes/generic-di"
+	"github.com/nodejayes/streaming-ui-server/cmd/server/example/components"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
-	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/components"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/utils"
 )
 
 type IndexPage struct {
-	utils.ViewHelper
-	Context               *gin.Context
-	Title                 string
-	OnLoad                func(eID string) types.Action
-	ReloadButton          types.Component
-	IncreaseCounterButton types.Component
-	DecreaseCounterButton types.Component
-	CounterDisplay        types.Component
+	Context         *gin.Context
+	Title           string
+	BlueButtonStyle *utils.Style
+	RedButtonStyle  *utils.Style
 }
 
 func NewIndexPage(ctx *gin.Context) *IndexPage {
-	page := &IndexPage{}
-	page.Context = ctx
-	page.Title = "Index Page"
-	page.ReloadButton = page.GetReloadButton()
-	page.IncreaseCounterButton = page.GetIncreaseCounterButton()
-	page.DecreaseCounterButton = page.GetDecreaseCounterButton()
-	page.CounterDisplay = page.GetCounterDisplay()
-	return page
-}
-
-func (ctx *IndexPage) GetReloadButton() types.Component {
-	return components.NewButton(components.NewText("+"), components.ButtonOptions{
-		OnClick: server.CreateEventHandler(NewReloadAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
-			server.SendCaller(server.NewRedirectAction("/", actx))
-		}),
-	})
-}
-
-func (ctx *IndexPage) GetIncreaseCounterButton() types.Component {
-	return components.NewButton(components.NewText("+"), components.ButtonOptions{
-		Style: &utils.Style{
+	return &IndexPage{
+		Title:   "Index Page",
+		Context: ctx,
+		BlueButtonStyle: &utils.Style{
 			BackgroundColor: "blue",
 			Color:           "grey",
 		},
-		OnClick: server.CreateEventHandler(NewCounterAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
-			if eventData.CtrlKey {
-				actx.State.Counter += 10
-			} else {
-				actx.State.Counter += 1
-			}
-			server.SendCaller(server.NewReplaceHtmlAction("#counters", ctx.GetCounterDisplay(), actx))
-		}),
-	})
-}
-
-func (ctx *IndexPage) GetDecreaseCounterButton() types.Component {
-	return components.NewButton(components.NewText("-"), components.ButtonOptions{
-		Class: "stdWidth",
-		Style: &utils.Style{
+		RedButtonStyle: &utils.Style{
 			BackgroundColor: "red",
 			Color:           "grey",
 		},
-		OnClick: server.CreateEventHandler(NewCounterAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
-			if eventData.CtrlKey {
-				actx.State.Counter -= 10
-			} else {
-				actx.State.Counter -= 1
-			}
-			server.SendCaller(server.NewReplaceHtmlAction("#counters", ctx.GetCounterDisplay(), actx))
-		}),
-	})
-}
-
-func (ctx *IndexPage) GetCounterDisplay() types.Component {
-	clientId, err := ctx.Context.Cookie("ClientId")
-	if err != nil {
-		return components.NewText("Error: " + err.Error())
 	}
-	state := di.Inject[AppState](clientId)
-	return NewCounterDisplayComponent("counter", state.Counter)
 }
 
 func (ctx *IndexPage) Render() string {
-	return ui.Render(`
-	<!DOCTYPE html>
-	<html>
-		<head>
-			<title>{{ .Title }}</title>
-			<script src="/live-replacer/lib/bundle.js"></script>
-			<style>
-				.stdWidth {
-					width: 150px;
-				}
-			</style>
-		</head>
-		<body>
-			<div id="header">
-				<h1>{{ .Title }}</h1>
-				{{ .Component .ReloadButton }}
-			</div>
-			<div id="counters">
-				{{ .Component .CounterDisplay }}
-			</div>
-			{{ .Component .IncreaseCounterButton }}
-			{{ .Component .DecreaseCounterButton }}
-			<div style="width:150px;height:150px;background-color:green;" lrmouseupaction="count increase">
-			</div>
-		</body>
-	</html>`, ctx)
+	return ui.RenderComponent(components.Index("Index Page", components.IndexOptions{
+		ReloadButton:   ctx.GetReloadButton(),
+		IncreaseButton: ctx.GetIncreaseCounterButton(),
+		DecreaseButton: ctx.GetDecreaseCounterButton(),
+		CounterDisplay: ctx.GetCounterDisplay(),
+	}))
+}
+
+func (ctx *IndexPage) GetReloadButton() templ.Component {
+	elementID := uuid.NewString()
+	onClickHandler := server.CreateEventHandler(NewReloadAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		server.SendCaller(server.NewRedirectAction("/", actx))
+	})
+	return components.Button(components.ButtonOptions{
+		ID:      elementID,
+		Style:   ctx.RedButtonStyle.GetString(),
+		OnClick: onClickHandler(elementID).GetType(),
+	}, "Reload")
+}
+
+func (ctx *IndexPage) GetIncreaseCounterButton() templ.Component {
+	elementID := uuid.NewString()
+	onClickHandler := server.CreateEventHandler(NewCounterAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		if eventData.CtrlKey {
+			actx.State.Counter += 10
+		} else {
+			actx.State.Counter += 1
+		}
+		server.SendCaller(server.NewReplaceHtmlAction("#counters > ul li", components.Text(fmt.Sprintf("%v", actx.State.Counter)), actx, utils.NewStartAnimation("fadeInDown", 250)))
+	})
+	return components.Button(components.ButtonOptions{
+		ID:      elementID,
+		Class:   "stdWidth",
+		Style:   ctx.BlueButtonStyle.GetString(),
+		OnClick: onClickHandler(elementID).GetType(),
+	}, "+")
+}
+
+func (ctx *IndexPage) GetDecreaseCounterButton() templ.Component {
+	elementID := uuid.NewString()
+	onClickHandler := server.CreateEventHandler(NewCounterAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		if eventData.CtrlKey {
+			actx.State.Counter -= 10
+		} else {
+			actx.State.Counter -= 1
+		}
+		server.SendCaller(server.NewReplaceHtmlAction("#counters > ul li", components.Text(fmt.Sprintf("%v", actx.State.Counter)), actx, utils.NewStartAnimation("fadeOutDown", 250)))
+	})
+	return components.Button(components.ButtonOptions{
+		ID:      elementID,
+		Class:   "stdWidth",
+		Style:   ctx.BlueButtonStyle.GetString(),
+		OnClick: onClickHandler(elementID).GetType(),
+	}, "-")
+}
+
+func (ctx *IndexPage) GetCounterDisplay() templ.Component {
+	clientId, err := ctx.Context.Cookie("ClientId")
+	if err != nil {
+		return components.Text("Error: " + err.Error())
+	}
+	state := di.Inject[AppState](clientId)
+	return components.CounterDisplay("counter", state.Counter)
 }

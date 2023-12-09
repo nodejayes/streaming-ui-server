@@ -1,0 +1,25 @@
+package components
+
+type ButtonOptions struct {
+	ID      string
+  Class   string
+	Style   string
+	OnClick string
+}
+
+templ Button(options ButtonOptions, content string) {
+  <button
+		id={ options.ID }
+		if options.Class != "" {
+			class={ options.Class }
+		}
+		if options.Style != "" {
+			style={ options.Style }
+		}
+		
+		if options.OnClick != "" {
+			lrClickAction={ options.OnClick }
+		}
+		lrClickDelay="250"
+	>{ content }</button>
+}

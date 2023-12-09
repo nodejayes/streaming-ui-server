@@ -1,0 +1,11 @@
+package components
+
+import "fmt"
+
+templ CounterDisplay(id string, counter int) {
+  <ul id={id}>
+    <li>{ fmt.Sprintf("%v", counter) }</li>
+    <li>{ fmt.Sprintf("%v", counter) }</li>
+    <li>{ fmt.Sprintf("%v", counter) }</li>
+  </ul>
+}
