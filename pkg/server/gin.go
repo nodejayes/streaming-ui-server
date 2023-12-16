@@ -130,7 +130,8 @@ func OnAction[TAction types.Action, TContext any](actionInstance TAction, execut
 	})
 }
 
-func AddPage[T types.Page](path string, pageCreator func(ctx *gin.Context) T) {
+func AddPage[T types.Page](path string, pageCreator func(ctx *gin.Context) T, registerActions func()) {
+	registerActions()
 	di.Inject[gin.Engine]().GET(path, func(ctx *gin.Context) {
 		clientId, err := ctx.Cookie("ClientId")
 		if err != nil {
