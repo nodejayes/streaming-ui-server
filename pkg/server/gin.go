@@ -74,13 +74,13 @@ func Engine() *gin.Engine {
 	return di.Inject[gin.Engine]()
 }
 
-func CreateActionContext[T any](creator func(clientID string, ctx *gin.Context) (T, error)) {
+func BuildActionContext[T any](creator func(clientID string, ctx *gin.Context) (T, error)) {
 	contextCreator = func(clientID string, ctx *gin.Context) (any, error) {
 		return creator(clientID, ctx)
 	}
 }
 
-func CreateCleanup(cleaner func(clientID string)) {
+func CleanupSession(cleaner func(clientID string)) {
 	stateCleaner = cleaner
 }
 

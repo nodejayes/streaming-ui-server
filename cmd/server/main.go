@@ -16,14 +16,14 @@ func main() {
 		SecureCookie:     true,
 	})
 
-	server.CreateActionContext(func(clientID string, ctx *gin.Context) (example.ActionContext, error) {
+	server.BuildActionContext(func(clientID string, ctx *gin.Context) (example.ActionContext, error) {
 		return example.ActionContext{
 			ClientID: clientID,
 			State:    di.Inject[example.AppState](clientID),
 		}, nil
 	})
 
-	server.CreateCleanup(func(clientID string) {
+	server.CleanupSession(func(clientID string) {
 		di.Destroy[example.AppState](clientID)
 	})
 
