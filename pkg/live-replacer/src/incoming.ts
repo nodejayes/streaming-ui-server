@@ -56,4 +56,7 @@ export async function replaceElements(action: Action<string>) {
       window.location.href = url;
     }
   }
+  if (action.type.startsWith("alert::")) {
+    alert(action.payload ?? "unknown alert!");
+  }
 }

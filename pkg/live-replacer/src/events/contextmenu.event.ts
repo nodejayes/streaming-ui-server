@@ -1,24 +1,28 @@
 import { ClickEventData } from "./types";
 import { BaseEvent } from "./base.event";
 
-export class ClickEvent {
+export class ContextMenuEvent {
   private static base = new BaseEvent();
   private static eventHandler = (e: Event) => {
     const event = e as PointerEvent;
+    event.preventDefault();
     if (!event) {
-      console.warn(`${ClickEvent.typ} event is not of type PointerEvent`, e);
+      console.warn(
+        `${ContextMenuEvent.typ} event is not of type PointerEvent`,
+        e
+      );
       return;
     }
     if (!event.target) {
-      console.warn(`missing ${ClickEvent.typ} event target`, e);
+      console.warn(`missing ${ContextMenuEvent.typ} event target`, e);
       return;
     }
-    ClickEvent.base?.handleEvent(
-      ClickEvent.typ,
+    ContextMenuEvent.base?.handleEvent(
+      ContextMenuEvent.typ,
       event.target as HTMLElement,
       () =>
         ({
-          typ: ClickEvent.typ,
+          typ: ContextMenuEvent.typ,
           ctrlKey: event.ctrlKey,
           altKey: event.altKey,
           shiftKey: event.shiftKey,
@@ -52,10 +56,14 @@ export class ClickEvent {
   };
 
   private static get typ() {
-    return "click";
+    return "contextmenu";
   }
 
   public static register(api: WsApi) {
-    ClickEvent.base.reattach(api, ClickEvent.typ, ClickEvent.eventHandler);
+    ContextMenuEvent.base.reattach(
+      api,
+      ContextMenuEvent.typ,
+      ContextMenuEvent.eventHandler
+    );
   }
 }

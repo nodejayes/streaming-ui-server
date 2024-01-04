@@ -44,7 +44,7 @@ export class DoubleClickEvent {
         } as MouseEventData), e);
     };
     private static get typ() {
-        return "dbclick"
+        return "dblclick"
     }
     public static register(api: WsApi) {
         DoubleClickEvent.base.reattach(api, DoubleClickEvent.typ, DoubleClickEvent.eventHandler);

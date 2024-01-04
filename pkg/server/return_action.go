@@ -28,3 +28,11 @@ func NewRedirectAction(url string, ctx ClientIdentity) socket.Action[string, Cli
 		Context: ctx,
 	}
 }
+
+func NewAlertAction(message string, ctx ClientIdentity) socket.Action[string, ClientIdentity] {
+	return socket.Action[string, ClientIdentity]{
+		Type:    "alert::",
+		Payload: message,
+		Context: ctx,
+	}
+}

@@ -10,6 +10,12 @@ type (
 	ReloadAction struct {
 		Type string
 	}
+	DoubleClickNoticeAction struct {
+		Type string
+	}
+	ContextMenuNoticeAction struct {
+		Type string
+	}
 )
 
 func NewPingAction() *PingAction {
@@ -39,5 +45,25 @@ func NewReloadAction() *ReloadAction {
 }
 
 func (ctx *ReloadAction) GetType() string {
+	return ctx.Type
+}
+
+func NewDoubleClickNoticeAction() *DoubleClickNoticeAction {
+	return &DoubleClickNoticeAction{
+		Type: "doubleClickNotice",
+	}
+}
+
+func (ctx *DoubleClickNoticeAction) GetType() string {
+	return ctx.Type
+}
+
+func NewContextMenuNoticeAction() *ContextMenuNoticeAction {
+	return &ContextMenuNoticeAction{
+		Type: "contextMenuNotice",
+	}
+}
+
+func (ctx *ContextMenuNoticeAction) GetType() string {
 	return ctx.Type
 }

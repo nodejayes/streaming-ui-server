@@ -48,12 +48,21 @@ func (ctx *IndexPage) Render() string {
 func (ctx *IndexPage) GetReloadButton() templ.Component {
 	elementID := uuid.NewString()
 	onClickHandler := server.CreateEventHandler(NewReloadAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
-		server.SendCaller(server.NewRedirectAction("/", actx))
+		// server.SendCaller(server.NewRedirectAction("/", actx))
+		server.SendCaller(server.NewAlertAction("Reload", actx))
+	})
+	onDoubleClickHandler := server.CreateEventHandler(NewDoubleClickNoticeAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		server.SendCaller(server.NewAlertAction("Double Click Reload", actx))
+	})
+	onContextMenuOpenHandler := server.CreateEventHandler(NewContextMenuNoticeAction(), func(action types.Action, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
+		server.SendCaller(server.NewAlertAction("Context Menu open", actx))
 	})
 	return components.Button(components.ButtonOptions{
-		ID:      elementID,
-		Style:   ctx.RedButtonStyle.GetString(),
-		OnClick: onClickHandler(elementID).GetType(),
+		ID:            elementID,
+		Style:         ctx.RedButtonStyle.GetString(),
+		OnClick:       onClickHandler(elementID).GetType(),
+		OnDoubleClick: onDoubleClickHandler(elementID).GetType(),
+		OnContextMenu: onContextMenuOpenHandler(elementID).GetType(),
 	}, "Reload")
 }
 

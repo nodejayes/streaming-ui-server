@@ -11,10 +11,12 @@ import "io"
 import "bytes"
 
 type ButtonOptions struct {
-	ID      string
-	Class   string
-	Style   string
-	OnClick string
+	ID            string
+	Class         string
+	Style         string
+	OnClick       string
+	OnDoubleClick string
+	OnContextMenu string
 }
 
 func Button(options ButtonOptions, content string) templ.Component {
@@ -89,7 +91,39 @@ func Button(options ButtonOptions, content string) templ.Component {
 				return templ_7745c5c3_Err
 			}
 		}
-		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" lrClickDelay=\"250\">")
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" lrClickDelay=\"250\"")
+		if templ_7745c5c3_Err != nil {
+			return templ_7745c5c3_Err
+		}
+		if options.OnDoubleClick != "" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" lrDblClickAction=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(options.OnDoubleClick))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		if options.OnContextMenu != "" {
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(" lrContextMenuAction=\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(templ.EscapeString(options.OnContextMenu))
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+			_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString("\"")
+			if templ_7745c5c3_Err != nil {
+				return templ_7745c5c3_Err
+			}
+		}
+		_, templ_7745c5c3_Err = templ_7745c5c3_Buffer.WriteString(">")
 		if templ_7745c5c3_Err != nil {
 			return templ_7745c5c3_Err
 		}

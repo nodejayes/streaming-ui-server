@@ -1,10 +1,12 @@
 package components
 
 type ButtonOptions struct {
-	ID      string
-  Class   string
-	Style   string
-	OnClick string
+	ID            string
+  Class         string
+	Style         string
+	OnClick       string
+	OnDoubleClick string
+	OnContextMenu string
 }
 
 templ Button(options ButtonOptions, content string) {
@@ -21,5 +23,12 @@ templ Button(options ButtonOptions, content string) {
 			lrClickAction={ options.OnClick }
 		}
 		lrClickDelay="250"
+
+		if options.OnDoubleClick != "" {
+			lrDblClickAction={ options.OnDoubleClick }
+		}
+		if options.OnContextMenu != "" {
+			lrContextMenuAction={ options.OnContextMenu }
+		}
 	>{ content }</button>
 }
