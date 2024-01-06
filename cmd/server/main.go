@@ -27,12 +27,12 @@ func main() {
 		di.Destroy[example.AppState](clientID)
 	})
 
-	server.AddPage("/", example.NewIndexPage, func() {
-		server.RegisterAction[*example.CounterAction, example.ActionContext](example.NewCounterAction())
-		server.RegisterAction[*example.ReloadAction, example.ActionContext](example.NewReloadAction())
-		server.RegisterAction[*example.PingAction, example.ActionContext](example.NewPingAction())
-		server.RegisterAction[*example.DoubleClickNoticeAction, example.ActionContext](example.NewDoubleClickNoticeAction())
-		server.RegisterAction[*example.ContextMenuNoticeAction, example.ActionContext](example.NewContextMenuNoticeAction())
+	server.AddPage[*example.IndexPage, example.ActionContext]("/", example.NewIndexPage, []string{
+		example.PingAction,
+		example.CounterAction,
+		example.ReloadAction,
+		example.DoubleClickNoticeAction,
+		example.ContextMenuNoticeAction,
 	})
 
 	server.Engine().GET("test", func(ctx *gin.Context) {

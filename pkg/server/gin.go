@@ -24,11 +24,16 @@ func init() {
 	di.Injectable(New)
 }
 
-type ServerOptions struct {
-	StateCleanupTime time.Duration
-	SessionLifetime  int
-	SecureCookie     bool
-}
+type (
+	Action struct {
+		Type string `json:"type"`
+	}
+	ServerOptions struct {
+		StateCleanupTime time.Duration
+		SessionLifetime  int
+		SecureCookie     bool
+	}
+)
 
 var options = ServerOptions{
 	StateCleanupTime: 60 * time.Second,
@@ -38,7 +43,7 @@ var options = ServerOptions{
 var contextCreator func(clientID string, ctx *gin.Context) (any, error)
 var stateCleaner func(clientID string)
 var actionHandlerMutex = &sync.Mutex{}
-var actionHandlers = make(map[string][]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any))
+var actionHandlers = make(map[string][]func(action string, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any))
 
 type (
 	ClientIdentity interface {
@@ -63,11 +68,11 @@ func New() *gin.Engine {
 	return router
 }
 
-func getActionKey(action types.Action, elementID *string) string {
+func getActionKey(action string, elementID *string) string {
 	if (*elementID) == "" {
 		*elementID = uuid.New().String()
 	}
-	return fmt.Sprintf("%s_%s", action.GetType(), *elementID)
+	return fmt.Sprintf("%s_%s", action, *elementID)
 }
 
 func Engine() *gin.Engine {
@@ -112,26 +117,28 @@ func SendTo[TPayload, TContext any](socketSelector func(socket socket.Instance) 
 	}
 }
 
-func OnAction[TAction types.Action, TContext any](actionInstance TAction, execution func(action TAction, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any)) {
+func OnAction[TContext any](actionInstance string, execution func(action string, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any)) {
 	event_emitter.Subscribe(socket.ParseSocketMessageEvent, func(params socket.ParseSocketMessageArguments, _ socket.ParseSocketMessageArguments) {
-		var msg ClientMessage[TAction]
+		var msg ClientMessage[Action]
 		err := json.Unmarshal(params.Message, &msg)
 		if err != nil {
 			return
 		}
-		if msg.Action.GetType() != actionInstance.GetType() {
+		if msg.Action.Type != actionInstance {
 			return
 		}
 		c, ok := params.Context.(TContext)
 		if !ok {
 			return
 		}
-		execution(msg.Action, c, params.ClientID, msg.ElementID, msg.Inputs, msg.EventData)
+		execution(msg.Action.Type, c, params.ClientID, msg.ElementID, msg.Inputs, msg.EventData)
 	})
 }
 
-func AddPage[T types.Page](path string, pageCreator func(ctx *gin.Context) T, registerActions func()) {
-	registerActions()
+func AddPage[T types.Page, TContext any](path string, pageCreator func(ctx *gin.Context) T, pageActions []string) {
+	for _, pageAction := range pageActions {
+		RegisterAction[TContext](pageAction)
+	}
 	di.Inject[gin.Engine]().GET(path, func(ctx *gin.Context) {
 		clientId, err := ctx.Cookie("ClientId")
 		if err != nil {
@@ -144,8 +151,8 @@ func AddPage[T types.Page](path string, pageCreator func(ctx *gin.Context) T, re
 	})
 }
 
-func RegisterAction[TAction types.Action, TContext any](action TAction) {
-	OnAction[TAction, TContext](action, func(action TAction, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
+func RegisterAction[TContext any](action string) {
+	OnAction[TContext](action, func(action string, ctx TContext, clientID, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
 		actionKey := getActionKey(action, &elementID)
 		handlers, ok := actionHandlers[actionKey]
 		if !ok {
@@ -168,16 +175,16 @@ func cleanupHandler(clientID string) {
 	}
 }
 
-func CreateEventHandler[TContext any, TEventData types.EventData](action types.Action, handler func(action types.Action, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) func(eID string) types.Action {
-	return func(eID string) types.Action {
+func CreateEventHandler[TContext any, TEventData types.EventData](action string, handler func(action string, ctx TContext, elementID string, inputs map[string]map[string]string, eventData TEventData)) func(eID string) string {
+	return func(eID string) string {
 		actionHandlerMutex.Lock()
 		defer actionHandlerMutex.Unlock()
 		actionKey := getActionKey(action, &eID)
 		handlers, ok := actionHandlers[actionKey]
 		if !ok {
-			handlers = make([]func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any), 0)
+			handlers = make([]func(action string, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any), 0)
 		}
-		handlers = append(handlers, func(action types.Action, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
+		handlers = append(handlers, func(action string, ctx any, elementID string, inputs map[string]map[string]string, eventData map[string]any) {
 			ctxConverted, ok := ctx.(TContext)
 			if !ok {
 				fmt.Printf("Error on convert Context: %v", ok)
