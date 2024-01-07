@@ -38,7 +38,9 @@ type ButtonOptions struct {
 
 templ Button(options ButtonOptions, content templ.Component) {
   <button
-		id={ options.ID }
+		if options.ID != "" {
+				id={ options.ID }
+		}
 		if options.Class != "" {
 			class={ options.Class }
 		}

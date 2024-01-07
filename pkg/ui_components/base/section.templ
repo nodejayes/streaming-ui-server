@@ -1,0 +1,103 @@
+package base
+
+import "fmt"
+
+type SectionOptions struct {
+  ID               string
+  Class            string
+  Style            string
+  OnClick          string
+	OnContextMenu    string
+	OnDoubleClick    string
+	OnMouseDown      string
+	OnMouseEnter     string
+	OnMouseLeave     string
+	OnMouseMove      string
+	OnMouseOut       string
+	OnMouseUp        string
+  ClickDelay       int
+	DoubleClickDelay int
+	ContextMenuDelay int
+	MouseEnterDelay  int
+	MouseLeaveDelay  int
+	MouseMoveDelay   int
+	MouseDownDelay   int
+	MouseUpDelay     int
+	MouseOutDelay    int
+}
+
+templ Section(options SectionOptions, content templ.Component) {
+  <div
+  if options.ID != "" {
+    id={ options.ID }
+  }
+  if options.Class != "" {
+    class={ options.Class }
+  }
+  if options.Style != "" {
+    style={ options.Style }
+  }
+  if options.OnClick != "" {
+    lrClickAction={ options.OnClick }
+  }
+  if options.ClickDelay > 0 {
+    lrClickDelay={ fmt.Sprintf("%v", options.ClickDelay) }
+  }
+
+  if options.OnDoubleClick != "" {
+    lrDblClickAction={ options.OnDoubleClick }
+  }
+  if options.DoubleClickDelay > 0 {
+    lrDoubleClickDelay={ fmt.Sprintf("%v", options.DoubleClickDelay) }
+  }
+
+  if options.OnContextMenu != "" {
+    lrContextMenuAction={ options.OnContextMenu }
+  }
+  if options.ContextMenuDelay > 0 {
+    lrContextMenuDelay={ fmt.Sprintf("%v", options.ContextMenuDelay) }
+  }
+
+  if options.OnMouseEnter != "" {
+    lrMouseEnterAction={ options.OnMouseEnter }
+  }
+  if options.MouseEnterDelay > 0 {
+    lrMouseEnterDelay={ fmt.Sprintf("%v", options.MouseEnterDelay) }
+  }
+
+  if options.OnMouseLeave != "" {
+    lrMouseLeaveAction={ options.OnMouseLeave }
+  }
+  if options.MouseLeaveDelay > 0 {
+    lrMouseLeaveDelay={ fmt.Sprintf("%v", options.MouseLeaveDelay) }
+  }
+
+  if options.OnMouseMove != "" {
+    lrMouseMoveAction={ options.OnMouseMove }
+  }
+  if options.MouseMoveDelay > 0 {
+    lrMouseMoveDelay={ fmt.Sprintf("%v", options.MouseMoveDelay) }
+  }
+
+  if options.OnMouseDown != "" {
+    lrMouseDownAction={ options.OnMouseDown }
+  }
+  if options.MouseDownDelay > 0 {
+    lrMouseDownDelay={ fmt.Sprintf("%v", options.MouseDownDelay) }
+  }
+
+  if options.OnMouseUp != "" {
+    lrMouseUpAction={ options.OnMouseUp }
+  }
+  if options.MouseUpDelay > 0 {
+    lrMouseUpDelay={ fmt.Sprintf("%v", options.MouseUpDelay) }
+  }
+
+  if options.OnMouseOut != "" {
+    lrMouseOutAction={ options.OnMouseOut }
+  }
+  if options.MouseOutDelay > 0 {
+    lrMouseOutDelay={ fmt.Sprintf("%v", options.MouseOutDelay) }
+  }
+  >{! content}</div>
+}

@@ -8,11 +8,11 @@ import (
 	"github.com/google/uuid"
 	di "github.com/nodejayes/generic-di"
 	"github.com/nodejayes/streaming-ui-server/cmd/server/example/components"
-	"github.com/nodejayes/streaming-ui-server/pkg/ui_components/base"
 	"github.com/nodejayes/streaming-ui-server/pkg/server"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/types"
 	"github.com/nodejayes/streaming-ui-server/pkg/server/ui/utils"
+	"github.com/nodejayes/streaming-ui-server/pkg/ui_components/base"
 )
 
 type IndexPage struct {
@@ -20,6 +20,7 @@ type IndexPage struct {
 	Title           string
 	BlueButtonStyle *utils.Style
 	RedButtonStyle  *utils.Style
+	HeadlineStyle   *utils.Style
 }
 
 func NewIndexPage(ctx *gin.Context) *IndexPage {
@@ -34,23 +35,23 @@ func NewIndexPage(ctx *gin.Context) *IndexPage {
 			BackgroundColor: "red",
 			Color:           "grey",
 		},
+		HeadlineStyle: &utils.Style{
+			Cursor: "pointer",
+		},
 	}
 }
 
 func (ctx *IndexPage) Render() string {
 	return ui.RenderComponent(components.Index("Index Page", components.IndexOptions{
-		ReloadButton:   ctx.GetReloadButton(),
-		IncreaseButton: ctx.GetIncreaseCounterButton(),
-		DecreaseButton: ctx.GetDecreaseCounterButton(),
-		CounterDisplay: ctx.GetCounterDisplay(),
+		HeaderSection: ctx.GetHeaderSection(),
+		MainSection:   ctx.GetMainSection(),
 	}))
 }
 
-func (ctx *IndexPage) GetReloadButton() templ.Component {
+func (ctx *IndexPage) GetHeaderSection() templ.Component {
 	elementID := uuid.NewString()
 	onClickHandler := server.CreateEventHandler(ReloadAction, func(action string, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
-		// server.SendCaller(server.NewRedirectAction("/", actx))
-		server.SendCaller(server.NewAlertAction("Reload", actx))
+		server.SendCaller(server.NewRedirectAction("/", actx))
 	})
 	onDoubleClickHandler := server.CreateEventHandler(DoubleClickNoticeAction, func(action string, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 		server.SendCaller(server.NewAlertAction("Double Click Reload", actx))
@@ -58,13 +59,24 @@ func (ctx *IndexPage) GetReloadButton() templ.Component {
 	onContextMenuOpenHandler := server.CreateEventHandler(ContextMenuNoticeAction, func(action string, actx ActionContext, elementID string, inputs map[string]map[string]string, eventData types.ClickEventData) {
 		server.SendCaller(server.NewAlertAction("Context Menu open", actx))
 	})
-	return base.Button(base.ButtonOptions{
-		ID:            elementID,
-		Style:         ctx.RedButtonStyle.GetString(),
-		OnClick:       onClickHandler(elementID),
-		OnDoubleClick: onDoubleClickHandler(elementID),
-		OnContextMenu: onContextMenuOpenHandler(elementID),
-	}, base.Text("Reload"))
+	return base.Section(
+		base.SectionOptions{
+			ID: uuid.NewString(),
+		},
+		base.Headline(base.HeadlineOptions{
+			ID:            elementID,
+			Style:         ctx.HeadlineStyle.GetString(),
+			OnClick:       onClickHandler(elementID),
+			OnDoubleClick: onDoubleClickHandler(elementID),
+			OnContextMenu: onContextMenuOpenHandler(elementID),
+		}, base.Text(ctx.Title)))
+}
+
+func (ctx *IndexPage) GetMainSection() templ.Component {
+	return base.Section(base.SectionOptions{
+		ID: "counters",
+	},
+		components.Main(ctx.GetCounterDisplay(), ctx.GetIncreaseCounterButton(), ctx.GetDecreaseCounterButton()))
 }
 
 func (ctx *IndexPage) GetIncreaseCounterButton() templ.Component {
