@@ -64,7 +64,6 @@ func Configure(serverOptions ServerOptions) {
 func New() *gin.Engine {
 	router := gin.Default()
 	router.StaticFS("/live-replacer", http.FS(livereplacer.Files))
-	router.GET("/ws", socket.Handle(contextCreator, stateCleaner, options.StateCleanupTime))
 	return router
 }
 
@@ -136,10 +135,12 @@ func OnAction[TContext any](actionInstance string, execution func(action string,
 }
 
 func AddPage[T types.Page, TContext any](path string, pageCreator func(ctx *gin.Context) T, pageActions []string) {
+	router := di.Inject[gin.Engine]()
+	router.GET(fmt.Sprintf("%s/ws", path), socket.Handle(contextCreator, stateCleaner, options.StateCleanupTime))
 	for _, pageAction := range pageActions {
 		RegisterAction[TContext](pageAction)
 	}
-	di.Inject[gin.Engine]().GET(path, func(ctx *gin.Context) {
+	router.GET(path, func(ctx *gin.Context) {
 		clientId, err := ctx.Cookie("ClientId")
 		if err != nil {
 			clientId = uuid.NewString()

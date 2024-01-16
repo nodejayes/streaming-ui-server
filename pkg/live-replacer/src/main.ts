@@ -3,7 +3,7 @@ import { replaceElements } from "./incoming";
 import { render } from "./rendering";
 import { FilterStore } from "./filter";
 
-const WS_LOCATION = "ws://localhost:40000/ws";
+const WS_LOCATION = `ws://${window.location.host}${window.location.pathname.endsWith('/') ? window.location.pathname.slice(0, -1) : window.location.pathname}/ws`;
 (window as any).Filters = FilterStore;
 
 (async function () {
