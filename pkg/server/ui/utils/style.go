@@ -258,6 +258,7 @@ func (ctx *Style) GetString() string {
 	writeBuffer(buf, ctx.CaptionSide, "caption-side")
 	writeBuffer(buf, ctx.Clear, "clear")
 	writeBuffer(buf, ctx.Clip, "clip")
+	writeBuffer(buf, ctx.Color, "color")
 	writeBuffer(buf, ctx.ColumnCount, "column-count")
 	writeBuffer(buf, ctx.ColumnFill, "column-fill")
 	writeBuffer(buf, ctx.ColumnGap, "column-gap")
